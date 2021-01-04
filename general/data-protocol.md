@@ -59,9 +59,9 @@ empty
 ## pc to flight controller 
 a single byte 
 
-`0x01` dump flash chip over serial \
+`0x01` respond with all the contents of the flashchip \
 `0x02` reply `0x02`
 
 ## pc to gateway
-`0x03` reply `0x02`
+`0x03` reply `0x03` \
 `0x04` after this is sent the gateway will relay every single byte that is sent to it, no going back
