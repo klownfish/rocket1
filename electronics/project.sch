@@ -288,7 +288,7 @@ L Device:C C?
 U 1 1 5FF15A10
 P 10000 4350
 F 0 "C?" V 9748 4350 50  0000 C CNN
-F 1 "22pF" V 9839 4350 50  0000 C CNN
+F 1 "10nF" V 9839 4350 50  0000 C CNN
 F 2 "" H 10038 4200 50  0001 C CNN
 F 3 "~" H 10000 4350 50  0001 C CNN
 	1    10000 4350
@@ -301,4 +301,45 @@ Wire Wire Line
 Connection ~ 10000 4500
 Wire Wire Line
 	10000 4500 10150 4500
+Wire Wire Line
+	6750 3500 6850 3500
+Wire Wire Line
+	6850 3500 6850 3600
+Wire Wire Line
+	6850 3600 7250 3600
+Text Label 7250 3600 2    50   ~ 0
+bat_read
+$Comp
+L Device:R R?
+U 1 1 5FF454D8
+P 2300 1600
+F 0 "R?" V 2507 1600 50  0000 C CNN
+F 1 "500k" V 2416 1600 50  0000 C CNN
+F 2 "" V 2230 1600 50  0001 C CNN
+F 3 "~" H 2300 1600 50  0001 C CNN
+	1    2300 1600
+	-1   0    0    1   
+$EndComp
+$Comp
+L Device:R R?
+U 1 1 5FF468AF
+P 2300 2000
+F 0 "R?" V 2507 2000 50  0000 C CNN
+F 1 "500k" V 2416 2000 50  0000 C CNN
+F 2 "" V 2230 2000 50  0001 C CNN
+F 3 "~" H 2300 2000 50  0001 C CNN
+	1    2300 2000
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	2300 1850 2300 1800
+Text GLabel 2300 2150 3    50   Input ~ 0
+GND
+Wire Wire Line
+	2300 1800 2700 1800
+Connection ~ 2300 1800
+Wire Wire Line
+	2300 1800 2300 1750
+Text Label 2700 1800 2    50   ~ 0
+bat_read
 $EndSCHEMATC

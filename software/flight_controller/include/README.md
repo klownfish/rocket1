@@ -1,7 +1,7 @@
 
 If you are an radio amateur please create a file named `callsign.h` that contains your callsign.
 
-It should look like this `#define CALLSIGN (['x', 'x', 'x', 'x', 'x', 'x'])`
+It should look like this `#define CALLSIGN "xxxxxx"`
 
 The code will adjust the TX properties depending on if you have a license or not. 
 
