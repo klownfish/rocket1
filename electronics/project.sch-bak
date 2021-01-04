@@ -285,4 +285,6 @@ Wire Wire Line
 	8400 4700 8850 4700
 Text GLabel 8100 4700 0    50   Input ~ 0
 3V3
+Text Notes 7400 7500 0    50   ~ 0
+Rocket1 flight controller\n
 $EndSCHEMATC

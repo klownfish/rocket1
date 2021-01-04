@@ -251,24 +251,20 @@ Wire Wire Line
 	8050 3300 8600 3300
 Wire Wire Line
 	8050 3200 8600 3200
-Wire Wire Line
-	9500 4500 9700 4500
-Text GLabel 9700 4500 2    50   Input ~ 0
+Text GLabel 10150 4500 2    50   Input ~ 0
 3V3
 $Comp
 L Device:R R?
 U 1 1 5FF4B056
-P 10100 4600
-F 0 "R?" V 9893 4600 50  0000 C CNN
-F 1 "100k" V 9984 4600 50  0000 C CNN
-F 2 "" V 10030 4600 50  0001 C CNN
-F 3 "~" H 10100 4600 50  0001 C CNN
-	1    10100 4600
-	0    1    1    0   
+P 10100 4750
+F 0 "R?" V 9893 4750 50  0000 C CNN
+F 1 "100k" V 9984 4750 50  0000 C CNN
+F 2 "" V 10030 4750 50  0001 C CNN
+F 3 "~" H 10100 4750 50  0001 C CNN
+	1    10100 4750
+	-1   0    0    1   
 $EndComp
-Wire Wire Line
-	9950 4600 9500 4600
-Text GLabel 10250 4600 2    50   Input ~ 0
+Text GLabel 10100 4900 3    50   Input ~ 0
 GND
 $Comp
 L Device:R R?
@@ -287,4 +283,22 @@ Text GLabel 8100 4700 0    50   Input ~ 0
 3V3
 Text Notes 7400 7500 0    50   ~ 0
 Rocket1 flight controller\n
+$Comp
+L Device:C C?
+U 1 1 5FF15A10
+P 10000 4350
+F 0 "C?" V 9748 4350 50  0000 C CNN
+F 1 "22pF" V 9839 4350 50  0000 C CNN
+F 2 "" H 10038 4200 50  0001 C CNN
+F 3 "~" H 10000 4350 50  0001 C CNN
+	1    10000 4350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9500 4600 10100 4600
+Wire Wire Line
+	9500 4500 10000 4500
+Connection ~ 10000 4500
+Wire Wire Line
+	10000 4500 10150 4500
 $EndSCHEMATC
