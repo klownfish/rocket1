@@ -1,0 +1,16 @@
+Use a better filtering technique than moving average
+
+estimate velocity and heading
+
+Add gps receiver
+
+figure out a way to transmit the gateways rssi
+
+make the data protocol better, time isn't needed for all messages for example
+
+an easy way to generate the protocol using a common JSON file and meta programming or something
+Maybe using python struct and a corresponding library for c++ could be a start.
+
+The len property in the protocol is useless. I could use struct.calcsize() instead
+
+Actually build the rocket

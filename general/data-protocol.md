@@ -2,14 +2,18 @@
 ## general structure
 Everything is little endian
 
-`01`  - `'$'`\
-`02`  - id-byte\
-`03`  - data byte 1\
-`04`  - data byte 2\
+`00`  - `'$'`\
+`01`  - length of message, including the `$` and checksum
+`02`  - ms_since_boot byte 1
+`03`  - ms_since_boot byte 2
+`04`  - ms_since_boot byte 3
+`05`  - ms_since_boot byte 4
+`06`  - id-byte\
+`07`  - data byte 1\
+`08`  - data byte 2\
 ...\
 `n+2` - data byte n\
-`n+3` - `'*'`\
-`n+4` - checksum (xor all the bytes, excluding '$' and '*')
+`n+3` - checksum (xor all the bytes, including '$' and the length)
 
 ## IDs and corresponding data
 ## rocket -> gateway(0x01 - 0x80)
@@ -18,7 +22,6 @@ Everything is little endian
 |type|value|scale|
 |-----|-----|----|
 | int16_t  | rssi | 0 |
-| uint32_t | milliseconds since boot| 0|
 | uint16_t | meters above sea | 3 |
 | uint16_t | temperature | 3 |
 | int16_t | acceleration x | 3 |

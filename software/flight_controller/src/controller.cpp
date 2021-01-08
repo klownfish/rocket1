@@ -7,7 +7,7 @@
 #include <Wire.h> // i2c
 
 #include "MovingAverage.h" // simple data filter
-#include "definitions.h" // pin definitions
+#include "definitions.h" // pin and protocol definitions
 
 #define SAMPLE_DELAY 100
 
@@ -118,8 +118,6 @@ void generate_checksum(uint8_t* buf, uint8_t* index) {
     for (uint8_t i = 1; i < *index; i++) {
         checksum ^= buf[i];
     }
-    buf[*index] = '*';
-    index++;
     buf[*index] = checksum;
     index++;
 }
@@ -128,10 +126,14 @@ void send_state() {
     uint8_t buf[24];
     uint8_t index = 0;
     buf[index++] = '$';
+    index++; // skip len byte
+    write_int_to_array(buf, millis(), &index);
+    buf[index++] = ID_STATE;
     write_int_to_array(buf, (uint16_t) (get_battery_voltage() * 1000), &index); 
     write_int_to_array(buf, (uint16_t) (sea_level_pressure * 1000), &index);
     write_int_to_array(buf, (uint16_t) (ground_level * 1000), &index);
     buf[index++] = sleeping;
+    buf[1] = index;
     generate_checksum(buf, &index);
     radio.send(buf, index);
 }
@@ -140,10 +142,17 @@ bool verify_message(uint8_t* msg, uint8_t len) {
     if (msg[0] != '$') {
         return false;
     }
+    uint8_t msg_len = msg[1];
+    if (msg_len > len) { 
+        return false;
+    }
+
     uint8_t checksum = 0x00;
     uint8_t i;
-    for (i = 1; i < len; i++) {
-        if (msg[i] == '*') break;
+    for (i = 0; i < len - 1; i++) {
+        if (msg[i] == '*') {
+            break;
+        }
         checksum ^= msg[i];
     }
     if (msg[++i] == checksum) {
@@ -169,24 +178,23 @@ void loop() {
     if (Serial.available()) {
         uint8_t c = Serial.read();
         switch (c){
-            case USB_DUMP_FLASH:
+            case CONTROLLER_DUMP_FLASH:
                 for (uint32_t i = 0; i < flash_index; i++) {
                     Serial.write(flash.readByte(i));
                 }
                 break;
             
-            case USB_HANDSHAKE:
+            case CONTROLLER_HANDSHAKE:
                 Serial.write(2);
         }
     }
 
-    //parse radio command
+    //parse radio command, the time doesn't really matter so skip it
     if (radio.recv(buf, &len) && verify_message(buf, len)) {       
-        switch (buf[1]) {
-            case ID_PRESSURE_SEA_LEVEL:
-                sea_level_pressure = ((float) (buf[2] + (buf[3] >> 8))) / 1000;
+        switch (buf[6]) {
+            case ID_PARAMETERS:
+                sea_level_pressure = ((float) (buf[7] + (buf[8] >> 8))) / 1000;
                 break;
-
             case ID_CALIBRATE:
                 calibrate();
                 break;
@@ -206,7 +214,7 @@ void loop() {
     if (time - last_sample < 100) {
         return;
     }
-    
+
     //bmp
     altitude.insert(bmp.readAltitude(sea_level_pressure));
     temperature.insert(bmp.readTemperature());
@@ -223,8 +231,10 @@ void loop() {
     //build message
     uint8_t index = 0;
     buf[index++] = '$';
-    write_int_to_array(buf, radio.lastRssi(), &index);
+    index++; //skip the len byte
     write_int_to_array(buf, time, &index);
+    buf[index++] = ID_TELEMETRY;
+    write_int_to_array(buf, radio.lastRssi(), &index);
     write_int_to_array(buf, (uint16_t) (altitude.get_value() * 1000), &index);
     write_int_to_array(buf, (uint16_t) (temperature.get_value() * 1000), &index);
     write_int_to_array(buf, (uint16_t) (acc_x.get_value() * 1000), &index);
@@ -232,7 +242,9 @@ void loop() {
     write_int_to_array(buf, (uint16_t) (acc_z.get_value() * 1000), &index);
     write_int_to_array(buf, (uint16_t) (gyro_x.get_value() * 1000), &index);
     write_int_to_array(buf, (uint16_t) (gyro_y.get_value() * 1000), &index);
+    write_int_to_array(buf, (uint16_t) (gyro_z.get_value() * 1000), &index);
     write_int_to_array(buf, (uint16_t) (get_battery_voltage() * 1000), &index); 
+    buf[1] = index;
     generate_checksum(buf, &index);
 
     radio.send(buf, index);
