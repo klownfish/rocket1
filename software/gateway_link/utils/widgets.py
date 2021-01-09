@@ -17,7 +17,7 @@ REFRESH = 16
 #clock - the clock that will be used
 #time_serise - a list with TimeSeries to display
 class GenericGraph():
-    def __init__(self, root, clock, time_series, width = 6, height = 4):
+    def __init__(self, root, clock, time_series, width = 9, height = 5):
         self.clock = clock
         self.time_series = time_series
         self.fig = plt.Figure(figsize=(width, height), dpi=100)
@@ -51,7 +51,7 @@ class GenericGraph():
 #text - displayed before the value
 #value - the TimeSeries that the value will be taken from
 class TextLastValue(tk.Label):
-    def __init__(self, root, text, value):
+    def __init__(self, root, text, value, **kwargs):
         self.text = text
         self.stringVar = tk.StringVar()
         self.stringVar.set(text)
@@ -86,9 +86,9 @@ class GyroGraph(GenericGraph):
             gw.data["gyro_z"]
         ]
         super().__init__(root, gw.get_time, dataLists)
-        self.ax.set_ylim(0, 255)
-        self.ax.set_title("rotation - degrees")
-
+        self.ax.set_ylim(-3.14, 3.14)
+        self.ax.set_title("rotation - radians/s")
+        self.ax.axhline(0, color='gray')
 
 class AccelerationGraph(GenericGraph):
     def __init__(self, root, gw):
@@ -98,11 +98,28 @@ class AccelerationGraph(GenericGraph):
             gw.data["acceleration_z"]
         ]
         super().__init__(root, gw.get_time, dataLists)
-        self.ax.set_ylim(0, 20)
+        self.ax.set_ylim(-20, 20)
         self.ax.set_title("acceleration - m/s²")
+        self.ax.axhline(0, color='gray')
 
 class AltitudeGraph(GenericGraph):
     def __init__(self, root, gw):
         super().__init__(root, gw.get_time, [gw.data["altitude"]])
         self.ax.set_ylim(0, 200)
         self.ax.set_title("altitude - m")
+
+class Parameters(tk.Frame):
+    def __init__(self, root, gw):
+        super().__init__(root)
+        self.value = tk.StringVar()
+        self.gw = gw
+        pressure_label = tk.Label(self, text = "hPa at sea-level")
+        pressure_label.grid(row = 0, column = 0)
+        pressure = tk.Entry(self, width = 13, textvariable = self.value)
+        pressure.grid(row = 0, column = 1)
+        confirm = tk.Button(self, text="update parameters", command = self.on_click)
+        confirm.grid(row = 1, column = 0)
+
+    def on_click(self):
+        num = float(self.value.get())
+        self.gw.update_parameters(num)
