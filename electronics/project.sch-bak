@@ -288,7 +288,7 @@ L Device:C C?
 U 1 1 5FF15A10
 P 10000 4350
 F 0 "C?" V 9748 4350 50  0000 C CNN
-F 1 "10nF" V 9839 4350 50  0000 C CNN
+F 1 "22pF" V 9839 4350 50  0000 C CNN
 F 2 "" H 10038 4200 50  0001 C CNN
 F 3 "~" H 10000 4350 50  0001 C CNN
 	1    10000 4350
@@ -308,7 +308,7 @@ Wire Wire Line
 Wire Wire Line
 	6850 3600 7250 3600
 Text Label 7250 3600 2    50   ~ 0
-bat_volt
+bat_read
 $Comp
 L Device:R R?
 U 1 1 5FF454D8
@@ -341,5 +341,7 @@ Connection ~ 2300 1800
 Wire Wire Line
 	2300 1800 2300 1750
 Text Label 2700 1800 2    50   ~ 0
-bat_volt
+bat_read
+Text GLabel 10000 4200 1    50   Input ~ 0
+GND
 $EndSCHEMATC
