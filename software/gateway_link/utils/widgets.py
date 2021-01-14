@@ -8,6 +8,7 @@ from time import time
 
 REFRESH = 16
 
+VIEWRANGE = 30
 ##################
 #Class to display TimeSeries
 ##################
@@ -36,7 +37,7 @@ class GenericGraph():
     def update(self, i): 
         relative_time = self.clock()
         self.ax.set_xlim(
-            relative_time - 60, relative_time)
+            relative_time - VIEWRANGE, relative_time)
         for i in range(len(self.time_series)):
             self.lines[i].set_data(self.time_series[i].x, self.time_series[i].y)
 
@@ -105,7 +106,7 @@ class AccelerationGraph(GenericGraph):
 class AltitudeGraph(GenericGraph):
     def __init__(self, root, gw):
         super().__init__(root, gw.get_time, [gw.data["altitude"]])
-        self.ax.set_ylim(0, 200)
+        self.ax.set_ylim(0, 50)
         self.ax.set_title("altitude - m")
 
 class Parameters(tk.Frame):
@@ -119,7 +120,7 @@ class Parameters(tk.Frame):
         pressure.grid(row = 0, column = 1)
         confirm = tk.Button(self, text="update parameters", command = self.on_click)
         confirm.grid(row = 1, column = 0)
-
+        
     def on_click(self):
         num = float(self.value.get())
         self.gw.update_parameters(num)

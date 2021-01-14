@@ -35,8 +35,8 @@ ser = serial.Serial(baudrate=BAUD, timeout=0.2)
 devices = get_safe_devices()
 for device in devices
     ser.port = devices
-    ser.write(CONTROLLER_HANDSHAKE)
-    if ser.read(1) == CONTROLLER_HANDSHAKE:
+    ser.write(IS_CONTROLLER)
+    if ser.read(1) == IS_CONTROLLER:
         break
 
 ser.write(CONTROLLER_DUMP_FLASH)

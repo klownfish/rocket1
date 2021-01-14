@@ -1,4 +1,7 @@
 import influxdb
+from influxdb import InfluxDBClient
+from utils.definitions import INFLUX_NAME
+
 import datetime
 
 class Timeseries():
@@ -14,32 +17,28 @@ class Data():
 def init_db(reset = False):
     try:
         client = InfluxDBClient(host='localhost', port='8086')
+        client.create_database(INFLUX_NAME)
         client.switch_database(INFLUX_NAME)
-        if reset:
-            reset_db(client)
         return client
     except:
         print("COULD NOT CONNECT TO INFLUX. NO DATA WILL BE WRITTEN TO THE SERVER")
         return 0
 
-def reset_db(client):
-    client.drop_database(INFLUX_NAME)
-    client.create_database(INFLUX_NAME)
-
-def write_data_db(value, client, time = False):
+def write_data_db(name, value, client, time = False):
     points = []
-    for v in data:
-        point = {
-            "measurement": "rocket",
-            "fields": {
-                v.measurement: v.value,
-            }
+    
+    point = {
+        "measurement": "rocket",
+        "fields": {
+            name: value,
         }
-        if time:
-            point["time"] = time
-        points.append(point)
+    }
+    if time:
+        point["time"] = time
+    points.append(point)
     try:
-        client.write_points(points)
+        if client:
+            client.write_points(points)
     except:
         print("could not write to the influx server")
     return 0
