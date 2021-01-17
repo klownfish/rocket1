@@ -7,8 +7,8 @@
 #   define IS_HAM false
 #endif
 
-#define RF_CS 14
-#define FLASH_CS 16
+#define RF_CS 14 //default ss because the SPIMemory doesn't work...
+#define FLASH_CS 10
 #define RF_G0 15
 #define BAT_READ A9
 #define RF_RST 17
@@ -17,8 +17,6 @@
 
 #define FREQUENCY 433.800
 #define MODULATION RH_RF69::ModemConfigChoice::GFSK_Rb4_8Fd9_6
-#define SYNC_WORD ""
-
 
 #define ID_TELEMETRY 0x01
 #define ID_STATE 0x02

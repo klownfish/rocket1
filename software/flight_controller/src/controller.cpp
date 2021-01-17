@@ -1,16 +1,16 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h> // i2c
-#include <SPIMemory.h> // for flash chip
-#include <RH_RF69.h> // the version from the platformio repo doesn't work,
-                     // i have included a working version in the git repo
+#include <SerialFlash.h> // for flash chip
+#include <SPIMemory.h>
+#include <RH_RF69.h>
 #include <Adafruit_BMP280.h>
 #include <Adafruit_MPU6050.h>
 
 #include "MovingAverage.h" // simple data filter
 #include "definitions.h" // pin and protocol definitions
 
-#define SAMPLE_DELAY 50
+#define SAMPLE_DELAY 500
 #define RADIO_CYCLES 2
 
 #define ALTITUDE_FILTER_LEN 10
@@ -22,7 +22,7 @@
 #define ALTITUDE_CALIBRATION_CYCLES 5
 
 RH_RF69 radio {RF_CS, RF_G0}; 
-SPIFlash flash {FLASH_CS};
+SPIFlash flash; //Use the default SPI SS
 Adafruit_BMP280 bmp;
 Adafruit_MPU6050 mpu;
 
@@ -62,19 +62,22 @@ int32_t array_to_int(uint8_t* array, uint8_t len) {
 }
 
 void init_pins() {
-    pinMode(FLASH_CS, OUTPUT);
     pinMode(RF_CS, OUTPUT);
     pinMode(BAT_READ, INPUT);
     pinMode(RF_RST, OUTPUT);
+    pinMode(FLASH_CS, OUTPUT);
 
-    digitalWrite(FLASH_CS, LOW);
-    digitalWrite(RF_CS, LOW);
+    digitalWrite(RF_CS, HIGH);
+    digitalWrite(FLASH_CS, HIGH);
 }
 
 void init_flash() {
+    flash.setClock(18000000);
     if (!flash.begin()) {
-        Serial.println("Could not initialize flash chip");
+        Serial.println("Could not init flash chip");
+        return;
     }
+    flash.eraseChip();
 }
 
 void init_radio() {
@@ -119,7 +122,7 @@ void calibrate() {
 float get_battery_voltage() {
     analogReadResolution(12);
     float volt = (float) analogRead(BAT_READ);
-    return volt / (2 << 12) * 3.3;   
+    return volt / ((1 << 11) - 1) * 3.3;   
 }
 
 void enter_sleep() {
@@ -136,7 +139,9 @@ void send_message(uint8_t* msg, uint8_t len, bool use_radio) {
     if (use_radio) {
         radio.send(msg, len);
     }
-    //flash.writeByteArray(flash_index, msg, len);
+    noInterrupts();
+    flash.writeByteArray(flash_index, msg, len);
+    interrupts();
     flash_index += len;
     Serial.write(msg, len);
 }
@@ -206,9 +211,7 @@ void setup() {
     delay(5000);
     Serial.begin(BAUD); // USB serial
     init_pins();    
-    //init_flash();
-    Serial.print("I'm going in");
-    Serial.print("yooo");
+    init_flash();
     init_MPU();
     init_BMP();
     init_radio();
@@ -240,6 +243,7 @@ void loop() {
                 for (uint32_t i = 0; i < flash_index; i++) {
                     Serial.write(flash.readByte(i));
                 }
+                return;
                 break;
             case HANDSHAKE:
                 Serial.write(HANDSHAKE);
