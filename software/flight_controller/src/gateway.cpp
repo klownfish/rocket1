@@ -8,6 +8,8 @@ RH_RF69 radio {RF_CS, RF_G0};
 bool transmit = false;
 uint32_t last_serial_read = 0;
 
+
+//write into to a byte array
 template<typename T>
 void write_int_to_array(uint8_t* array, T num, uint8_t* index) {
     for(uint8_t i = 0; i < sizeof(T); i++) {
@@ -63,7 +65,6 @@ void generate_checksum(uint8_t* buf, uint8_t* index) {
 }
 
 void setup() {
-    delay(5000);
     Serial.begin(BAUD);
     init_pins();
     init_radio();
@@ -73,7 +74,8 @@ void setup() {
 void loop() {
     uint8_t buf[RADIO_BUF_LEN];
     uint8_t len = RADIO_BUF_LEN;
-    if (!transmit && get_usb_message(buf, &len)) {
+    if (get_usb_message(buf, &len)) {
+        //switch on id
         switch (buf[6]) {
             case HANDSHAKE:
                 Serial.write(HANDSHAKE);
@@ -83,33 +85,32 @@ void loop() {
 
             case IS_CONTROLLER:
                 Serial.write(0);
-            
+                break;
+
             case IS_GATEWAY:
                 Serial.write(1);
-
-            case GATEWAY_TRANSMIT:
-                transmit = true;
                 break;
+            
+            default:
+                //relay message
+                radio.send(buf, len);
+                radio.waitPacketSent();
         }
-    }
-    
-    len = RADIO_BUF_LEN;
-    if (transmit && get_usb_message(buf, &len)) {
-        radio.send(buf, len);
-        radio.waitPacketSent();
     }
 
     len = RADIO_BUF_LEN;
     if (radio.recv(buf, &len)) {
+        //relay the raw packet
         Serial.write(buf, len);
         Serial.flush();
 
+        //generate RSSI message
         uint8_t msg[32];
         uint8_t index = 0;
         msg[index] = '$';
         index++;
         index++; //skip len
-        
+    
         write_int_to_array(msg, (int32_t) 0, &index);
         msg[index] = GATEWAY_RSSI;
         index++;
