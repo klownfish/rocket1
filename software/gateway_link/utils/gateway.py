@@ -44,7 +44,7 @@ class Gateway():
     def init_device(self):
         self.pause
         self.send_message(bytes([HANDSHAKE]), True)
-        time.sleep(0.3)
+        time.sleep(0.5)
         init = bytes([HANDSHAKE]) in self.ser.read_all() 
         return init
 
@@ -52,7 +52,7 @@ class Gateway():
         if self.stream_initialized:
             return 1
         try:
-            self.stream = open(path, "r")
+            self.stream = open(path, "rb")
             self.stream_initialized = 1
             return 1
         except:
@@ -151,8 +151,8 @@ class Gateway():
                     print(char)
                 continue
             
-            length = self.ser.read(1)
-            msg = self.ser.read(length[0] - 1)
+            length = self.stream.read(1)
+            msg = self.stream.read(length[0] - 1)
             combined_message = char + length + msg
 
             if self.verify_message(combined_message):

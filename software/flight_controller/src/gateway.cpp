@@ -15,7 +15,7 @@ void write_int_to_array(uint8_t* array, T num, uint8_t* index) {
     for(uint8_t i = 0; i < sizeof(T); i++) {
         array[*index] = num & 0xFF;
         num >>= 8;
-        (*index)++; 
+        (*index)++;
     }
 }
 
@@ -23,7 +23,7 @@ void init_pins() {
     pinMode(RF_CS, OUTPUT);
     pinMode(RF_RST, OUTPUT);
 
-    digitalWrite(RF_CS, LOW);
+    digitalWrite(RF_CS, HIGH);
 }
 
 void init_radio() {

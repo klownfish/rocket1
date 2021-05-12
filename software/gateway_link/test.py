@@ -12,10 +12,12 @@ def send_message(ser, msg):
         ser.write(combined_message)
         print(combined_message)
 
+
 ser = serial.Serial()
 ser.baudrate = 115200
-ser.port = "/dev/ttyACM4"
+ser.port = "/dev/ttyACM3"
 ser.open()
 
+send_message(ser, )
 while True:
     print(ser.read())

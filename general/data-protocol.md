@@ -60,9 +60,9 @@ empty
 ## PC -> USB
 All radio commands should work over USB, not all USB commands should work over radio
 ### 0xB0 - handshake
-responds with 0xB0
+responds with 0xB00
 
-### 0xB1 - Dump flash
+### 0xB1 - Dump flash 
 responds with the contents of the flash chip
 
 ### 0xB2 - Start transmit
