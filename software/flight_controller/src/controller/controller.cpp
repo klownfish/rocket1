@@ -9,27 +9,45 @@
 
 #include "MPU9250.h"
 #include "definitions.h" // pin and protocol definitions
+#include "rocket.h"
+#include "protocol.h"
 
-#define CYCLE_DELAY 50
+void megalovania(); //haha lolz
+void dance();
 
 #define FLASH_TEST_BYTES 10
 
 #define MAGNETOMETER_OFFSET_ADDR 0
 
 RH_RF69 radio {PIN_RF_CS, PIN_RF_G0}; 
-SPIFlash flash; //Use the default SPI SS
+SPIFlash flash {PIN_FLASH_CS};
 Adafruit_BMP280 bmp;
 MPU9250 mpu;
 
 uint32_t flash_addr = 0;
 float ground_level = 0;
-float sea_level_hpa = 1001.25;
 bool error = false;
+bool flash_enabled = false;
+
+rocket::state state = rocket::state::sleeping;
+
+uint16_t stateToCycleDelay(enum rocket::state state) {
+    switch (state) {
+        case rocket::state::sleeping:
+            return ~0; //max
+            break;
+        case rocket::state::awake:
+            return 1000;
+            break;
+        default:
+            return 1; //LIGHT SPEED BABY
+    }
+}
 
 void dispRgb(uint8_t R, uint8_t G, uint8_t B) {
-    analogWrite(PIN_LED_R, R);
-    analogWrite(PIN_LED_G, G);
-    analogWrite(PIN_LED_B, B);
+    analogWrite(PIN_LED_R, R / 16); // this led is so bright...
+    analogWrite(PIN_LED_G, G / 16);
+    analogWrite(PIN_LED_B, B / 16);
 }
 
 void initPins() {
@@ -55,13 +73,14 @@ void initPins() {
     digitalWrite(PIN_FLASH_CS, HIGH);
     digitalWrite(PIN_FLASH_WP, HIGH);
     digitalWrite(PIN_FLASH_HOLD, HIGH);
+    delay(100);
 }
 
 void restoreFlashAddr() {
-    uint8_t buf[FLASH_TEST_BYTES];
     uint8_t empty_in_row = 0;
+    uint8_t byte = 0;
     while (true) {
-        if (flash.readByte(flash_addr) == 0xff) {
+        if ((byte = flash.readByte(flash_addr)) == 0xff) {
             empty_in_row += 1;
         } else {
             empty_in_row = 0;
@@ -70,26 +89,23 @@ void restoreFlashAddr() {
             flash_addr -= FLASH_TEST_BYTES - 1;
             break;
         }
-        
+        flash_addr++;        
     }
 }
 
-void initFlash() {
-    flash.setClock(18e6);
+void initFlash() {   
+    flash.setClock(104000000 / 2);
     if (!flash.begin()) {
         Serial.println("Could not init flash chip");
         error = true;
         return;
     }
-    uint8_t buf[FLASH_TEST_BYTES];
-    if (!flash.readByteArray(0, buf, FLASH_TEST_BYTES)) {
-        for (uint8_t i = 0; i < FLASH_TEST_BYTES; i++) {
-            if (buf[i] != 0xff) {
-                restoreFlashAddr();
-                Serial.print("restoring to addres: ");
-                Serial.println(flash_addr);
-                return;
-            }
+    for (uint8_t i = 0; i < FLASH_TEST_BYTES; i++) {
+        if (flash.readByte(i) != 0xff) {
+            restoreFlashAddr();
+            Serial.print("restoring to addres: ");
+            Serial.println(flash_addr);
+            return;
         }
     }
 }
@@ -141,7 +157,7 @@ float readBatteryVoltage() {
 void setup() {
     Serial.begin(BAUD); // USB serial
     elapsedMillis boot;
-    while (!Serial && boot < 5000) {}    
+    while (!Serial && boot < 2000) {}    
     initPins();
     dispRgb(0, 0, 255);
     initFlash();
@@ -150,29 +166,55 @@ void setup() {
     initRadio();
     Serial.println("init finished");
     if (error) {
+        // not good
         dispRgb(255, 0, 0);
         analogWrite(PIN_BUZZER, 128);
         delay(1000);
         analogWrite(PIN_BUZZER, 0);
     } else {
+        // the all good song
+        dance();
         dispRgb(0, 255, 0);
-        analogWrite(PIN_BUZZER, 128);
-        delay(200);
-        analogWrite(PIN_BUZZER, 0);
-        delay(200);
-        analogWrite(PIN_BUZZER, 128);
-        delay(200);
-        analogWrite(PIN_BUZZER, 0);
     }
 }
 
 void loop() {
     static uint32_t last_sample;
-    uint8_t buf[RADIO_BUF_LEN]; 
-    uint8_t len = RADIO_BUF_LEN;
+    uint8_t buf[RH_RF69_MAX_MESSAGE_LEN]; 
+    uint8_t len = RH_RF69_MAX_MESSAGE_LEN;
+    handleDataStreams();
 
     uint32_t time = millis();
-    if (time - last_sample < CYCLE_DELAY) {
+    if (time - last_sample < stateToCycleDelay(state)) {
         return;
     }
+    // set current time
+    last_sample = time;
+    rocket::timestamp_from_rocket_to_ground msg;
+    msg.set_ms_since_boot(time);
+    sendMsg(&msg, ALWAYS);
+
+    rocket::state_from_rocket_to_ground state_msg;
+    state_msg.set_state(state);
+    sendMsg(&msg, REGULAR);
+
+    if (mpu.available()) {
+        mpu.update();
+        rocket::mpu_from_rocket_to_ground mpu_msg;
+        mpu_msg.set_acc_x(mpu.getAccX());
+        mpu_msg.set_acc_y(mpu.getAccY());
+        mpu_msg.set_acc_z(mpu.getAccZ());
+        mpu_msg.set_mag_x(mpu.getMagX());
+        mpu_msg.set_mag_y(mpu.getMagY());
+        mpu_msg.set_mag_z(mpu.getMagZ());
+        mpu_msg.set_gyro_x(mpu.getGyroX());
+        mpu_msg.set_gyro_y(mpu.getGyroY());
+        mpu_msg.set_gyro_z(mpu.getGyroZ());
+        sendMsg(&mpu_msg, REGULAR);
+    }
+
+    rocket::bmp_from_rocket_to_ground bmp_msg;
+    bmp_msg.set_altitude(bmp.readAltitude() - ground_level);
+    bmp_msg.set_temperature(bmp.readTemperature());
+    sendMsg(&bmp_msg, REGULAR);
 }

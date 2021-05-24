@@ -34,7 +34,7 @@ class GenericGraph():
         self.ani = animation.FuncAnimation(
             self.fig, self.update, interval=REFRESH)
     
-    def update(self, i): 
+    def update(self, _): 
         relative_time = self.clock()
         self.ax.set_xlim(
             relative_time - VIEWRANGE, relative_time)
@@ -68,6 +68,24 @@ class TextLastValue(tk.Label):
             return
         self.stringVar.set(self.text + str(self.value.y[-1]))
 
+class EnumLastValue(tk.Label):
+    def __init__(self, root, text, value, **kwargs):
+        self.text = text
+        self.stringVar = tk.StringVar()
+        self.stringVar.set(text)
+        self.widget = tk.Label(root, textvariable = self.stringVar)
+        self.value = value
+        self.root = root
+        self.update()
+        super().__init__(root, textvariable = self.stringVar)
+
+    def update(self):
+        self.root.after(REFRESH, self.update)    
+        if len(self.value.y) == 0:
+            return
+        self.stringVar.set(self.text + self.value.y[-1].name)
+
+    
 class ButtonFile(tk.Button):
     def __init__(self, root, **kwargs):
         self.on_click = kwargs["command"]
@@ -82,45 +100,43 @@ class ButtonFile(tk.Button):
 class GyroGraph(GenericGraph):
     def __init__(self, root, gw):
         dataLists = [
-            gw.data["gyro_x"],
-            gw.data["gyro_y"],
-            gw.data["gyro_z"]
+            gw.data["rocket"]["mpu"]["gyro_x"],
+            gw.data["rocket"]["mpu"]["gyro_y"],
+            gw.data["rocket"]["mpu"]["gyro_z"]
         ]
-        super().__init__(root, gw.get_time, dataLists)
-        self.ax.set_ylim(-3.14, 3.14)
+        super().__init__(root, gw.get_current_time, dataLists)
+        self.ax.set_ylim(-360, 360)
         self.ax.set_title("rotation - radians/s")
         self.ax.axhline(0, color='gray')
 
 class AccelerationGraph(GenericGraph):
     def __init__(self, root, gw):
         dataLists = [
-            gw.data["acceleration_x"],
-            gw.data["acceleration_y"],
-            gw.data["acceleration_z"]
+            gw.data["rocket"]["mpu"]["acc_x"],
+            gw.data["rocket"]["mpu"]["acc_y"],
+            gw.data["rocket"]["mpu"]["acc_z"],
         ]
-        super().__init__(root, gw.get_time, dataLists)
+        super().__init__(root, gw.get_current_time, dataLists)
         self.ax.set_ylim(-20, 20)
         self.ax.set_title("acceleration - m/s²")
         self.ax.axhline(0, color='gray')
 
 class AltitudeGraph(GenericGraph):
     def __init__(self, root, gw):
-        super().__init__(root, gw.get_time, [gw.data["altitude"]])
-        self.ax.set_ylim(0, 50)
+        super().__init__(root, gw.get_current_time, [gw.data["rocket"]["bmp"]["altitude"]])
+        self.ax.set_ylim(-5, 50)
         self.ax.set_title("altitude - m")
 
-class Parameters(tk.Frame):
-    def __init__(self, root, gw):
+class MagCalibration(tk.Frame):
+    def __init__(self, root, gw, **settings):
         super().__init__(root)
-        self.value = tk.StringVar()
         self.gw = gw
-        pressure_label = tk.Label(self, text = "hPa at sea-level")
-        pressure_label.grid(row = 0, column = 0)
-        pressure = tk.Entry(self, width = 13, textvariable = self.value)
-        pressure.grid(row = 0, column = 1)
-        confirm = tk.Button(self, text="update parameters", command = self.on_click)
-        confirm.grid(row = 1, column = 0)
-        
-    def on_click(self):
-        num = float(self.value.get())
-        self.gw.update_parameters(num)
+        self.button = tk.Button(self, text="mag calibration", command = self.update, **settings)
+        self.text = tk.Text(self, height = 1, width = 5, **settings)
+        tk.Label(self, text="Mag declination:").grid(column=0, row=0)
+        self.text.grid(column = 0, row = 1)
+        self.button.grid(column = 0, row = 2)
+
+    def update(self):
+        num = float(self.text.get("1.0", "end"))
+        self.gw.calibrate_mag(num)

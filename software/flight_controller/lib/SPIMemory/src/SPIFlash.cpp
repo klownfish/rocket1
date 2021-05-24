@@ -101,7 +101,6 @@ SPIFlash::SPIFlash(uint8_t cs) {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 //     Public functions used for read, write and erase operations     //
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-
 //Identifies chip and establishes parameters
 bool SPIFlash::begin(uint32_t flashChipSize) {
 #ifdef RUNDIAGNOSTIC
@@ -120,7 +119,6 @@ bool SPIFlash::begin(uint32_t flashChipSize) {
   else {
     BEGIN_SPI
   }
-
 #ifdef SPI_HAS_TRANSACTION
   //Define the settings to be used by the SPI bus
   if (!_SPISettingsSet) {

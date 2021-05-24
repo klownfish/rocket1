@@ -4,7 +4,7 @@ from utils.definitions import INFLUX_NAME
 
 import datetime
 
-class Timeseries():
+class TimeSeries():
     def __init__(self):
         self.x = []
         self.y = []
@@ -24,7 +24,7 @@ def init_db(reset = False):
         print("COULD NOT CONNECT TO INFLUX. NO DATA WILL BE WRITTEN TO THE SERVER")
         return 0
 
-def write_data_db(name, value, client, time = False):
+def write_data_db(sender, field, value, client, time = False):
     points = []
     
     point = {
