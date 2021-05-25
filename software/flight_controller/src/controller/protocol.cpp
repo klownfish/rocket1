@@ -4,9 +4,30 @@
 #include "protocol.h"
 #include "rocket.h"
 
-#define RADIO_EVERY 3
+void smash();
 
 uint8_t message_count[255] = {0}; //init to 0
+
+uint8_t stateToRadioFrequency(enum rocket::state state) {
+    switch (state) {
+        case rocket::state::sleeping:
+            return 1; //max
+            break;
+        case rocket::state::awake:
+            return 1; // once a second
+            break;
+        
+        case rocket::state::ready:
+        case rocket::state::falling:
+        case rocket::state::ascending:
+        case rocket::state::landed:
+            return 3;
+            break;
+
+        default:
+            return 1; // 20Hz
+    }
+}
 
 void handleDataStreams() {
     static DataProtocol radio_protocol;
@@ -31,17 +52,19 @@ void sendMsg(rocket::MessageBase* msg, enum send_when send) {
         flash.writeByteArray(flash_addr, buf, len);
         flash_addr += len;
     }
-    Serial.write(buf, len);
 
     switch (send) {
         case REGULAR:
-            message_count[id] = (message_count[id] + 1) % RADIO_EVERY;
+            message_count[id] = (message_count[id] + 1) % stateToRadioFrequency(rocket_state);
             if (message_count[id] == 0) {
                 radio.send(buf, len);
+                Serial.write(buf, len);
+
             }
             break;
         case ALWAYS:
             radio.send(buf, len);
+            Serial.write(buf, len);
             break;
         case NEVER:
             break;
@@ -49,6 +72,8 @@ void sendMsg(rocket::MessageBase* msg, enum send_when send) {
 }
 
 void dataProtocolCallback(uint8_t id, uint8_t* buf, uint8_t len) {
+    rocket::parse_message(id, buf);
+
     uint8_t header[HEADER_SIZE];
     uint8_t header_len;
     DataProtocol::build_header(id, header, &header_len);
@@ -59,20 +84,21 @@ void dataProtocolCallback(uint8_t id, uint8_t* buf, uint8_t len) {
         flash.writeByteArray(flash_addr, buf, len);
         flash_addr += len;
     }
-    rocket::parse_message(id, buf);
 }
 
 void rocket::rx(rocket::handshake_from_ground_to_rocket msg) {
     rocket::handshake_from_rocket_to_ground response;
+    tone(PIN_BUZZER, 3000, 100);
+
     delay(200);
     sendMsg(&response, ALWAYS);
     delay(500);
 }
 
 void rocket::rx(rocket::set_state_from_ground_to_rocket msg) {
-    ::state = msg.get_state();
+    ::rocket_state = msg.get_state();
     rocket::state_from_rocket_to_ground response;
-    response.set_state(::state);
+    response.set_state(::rocket_state);
     sendMsg(&response, ALWAYS);
 }
 
@@ -80,6 +106,9 @@ void rocket::rx(rocket::simple_calibration_from_ground_to_rocket msg) {
     dispRgb(255, 0, 255);
     mpu.calibrateAccelGyro();
     ground_level = bmp.readAltitude();
+    while(!mpu.available()){}
+    mpu.update();
+    negative_z = mpu.getAccZ() > 0.0;
     dispRgb(0, 255, 0);
 }
 
@@ -88,4 +117,22 @@ void rocket::rx(rocket::mag_calibration_from_ground_to_rocket msg) {
     mpu.setMagneticDeclination(msg.get_declination());
     mpu.calibrateMag();
     dispRgb(0, 255, 0);
+}
+
+void rocket::rx(rocket::play_music_from_ground_to_rocket msg) {
+    if (::rocket_state == state::sleeping || ::rocket_state == state::ready || ::rocket_state == state::awake) {
+        smash();
+    }
+}
+
+void rocket::rx(rocket::wipe_flash_from_ground_to_rocket msg) {
+    if (msg.get_this_to_42() != 42) return;
+    dispRgb(255, 128, 255);
+    flash.eraseChip();
+    flash_addr = 0;
+    dispRgb(0, 255, 0);
+}
+
+void rocket::rx(rocket::set_logging_from_ground_to_rocket msg) {
+    flash_enabled = msg.get_is_enabled();
 }

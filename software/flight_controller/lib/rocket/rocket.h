@@ -30,20 +30,23 @@ enum struct fields : uint8_t {
   local_timestamp = 0,
   ms_since_boot = 1,
   declination = 2,
-  altitude = 3,
-  temperature = 4,
-  acc_x = 5,
-  acc_y = 6,
-  acc_z = 7,
-  gyro_x = 8,
-  gyro_y = 9,
-  gyro_z = 10,
-  mag_x = 11,
-  mag_y = 12,
-  mag_z = 13,
-  voltage = 14,
-  state = 15,
-  rssi = 16,
+  this_to_42 = 3,
+  is_enabled = 4,
+  address = 5,
+  altitude = 6,
+  temperature = 7,
+  acc_x = 8,
+  acc_y = 9,
+  acc_z = 10,
+  gyro_x = 11,
+  gyro_y = 12,
+  gyro_z = 13,
+  mag_x = 14,
+  mag_y = 15,
+  mag_z = 16,
+  voltage = 17,
+  state = 18,
+  rssi = 19,
 };
 enum struct messages : uint8_t {
   local_timestamp = 0,
@@ -51,14 +54,17 @@ enum struct messages : uint8_t {
   handshake = 2,
   simple_calibration = 3,
   mag_calibration = 4,
-  play_music = 5,
-  bmp = 6,
-  mpu = 7,
-  battery_voltage = 8,
-  set_state = 9,
-  state = 10,
-  rssi = 11,
-  ms_since_boot = 12,
+  wipe_flash = 5,
+  play_music = 6,
+  set_logging = 7,
+  flash_address = 8,
+  bmp = 9,
+  mpu = 10,
+  battery_voltage = 11,
+  set_state = 12,
+  state = 13,
+  rssi = 14,
+  ms_since_boot = 15,
 };
 enum struct categories : uint8_t {
   none = 0,
@@ -252,10 +258,12 @@ public:
   }
 };
 
-class play_music_from_ground_to_rocket : public MessageBase {
+class wipe_flash_from_ground_to_rocket : public MessageBase {
 public:
-  uint8_t size = 0;
-  enum messages message = messages::play_music;
+  uint8_t this_to_42;
+  static_assert((sizeof(this_to_42) == 1), "invalid size");
+  uint8_t size = 1;
+  enum messages message = messages::wipe_flash;
   enum nodes sender = nodes::ground;
   enum nodes receiver = nodes::rocket;
   enum categories category = categories::none;
@@ -265,8 +273,93 @@ public:
   enum nodes get_sender() override { return sender; }
   enum nodes get_receiver() override { return receiver; }
   uint8_t get_id() override { return id; }
+  void set_this_to_42(uint8_t value) { this_to_42 = value; }
+  uint8_t get_this_to_42() { return this_to_42; }
+  void build_buf(uint8_t *buf, uint8_t *index) override {
+    memcpy(buf + *index, &this_to_42, sizeof(this_to_42));
+    *index += sizeof(this_to_42);
+  }
+  void parse_buf(uint8_t *buf) override {
+    uint8_t index = 0;
+    memcpy(&this_to_42, buf + index, sizeof(this_to_42));
+    index += sizeof(this_to_42);
+  }
+};
+
+class play_music_from_ground_to_rocket : public MessageBase {
+public:
+  uint8_t size = 0;
+  enum messages message = messages::play_music;
+  enum nodes sender = nodes::ground;
+  enum nodes receiver = nodes::rocket;
+  enum categories category = categories::none;
+  uint8_t id = 7;
+  enum categories get_category() override { return category; }
+  uint8_t get_size() override { return size; }
+  enum nodes get_sender() override { return sender; }
+  enum nodes get_receiver() override { return receiver; }
+  uint8_t get_id() override { return id; }
   void build_buf(uint8_t *buf, uint8_t *index) override {}
   void parse_buf(uint8_t *buf) override {}
+};
+
+class set_logging_from_ground_to_rocket : public MessageBase {
+public:
+  uint8_t bit_field = 0;
+  static_assert((sizeof(bit_field) == 1), "invalid size");
+  void set_is_enabled(bool value) {
+    bit_field =
+        value * (bit_field | (1 << 0)) + !value * (bit_field & ~(1 << 0));
+  }
+  bool get_is_enabled() { return bit_field & (1 << 0); }
+  uint8_t size = 1;
+  enum messages message = messages::set_logging;
+  enum nodes sender = nodes::ground;
+  enum nodes receiver = nodes::rocket;
+  enum categories category = categories::none;
+  uint8_t id = 8;
+  enum categories get_category() override { return category; }
+  uint8_t get_size() override { return size; }
+  enum nodes get_sender() override { return sender; }
+  enum nodes get_receiver() override { return receiver; }
+  uint8_t get_id() override { return id; }
+  void build_buf(uint8_t *buf, uint8_t *index) override {
+    memcpy(buf + *index, &bit_field, sizeof(bit_field));
+    *index += sizeof(bit_field);
+  }
+  void parse_buf(uint8_t *buf) override {
+    uint8_t index = 0;
+    memcpy(&bit_field, buf + index, sizeof(bit_field));
+    index += sizeof(bit_field);
+  }
+};
+
+class flash_address_from_rocket_to_ground : public MessageBase {
+public:
+  uint32_t address;
+  static_assert((sizeof(address) == 4), "invalid size");
+  uint8_t size = 4;
+  enum messages message = messages::flash_address;
+  enum nodes sender = nodes::rocket;
+  enum nodes receiver = nodes::ground;
+  enum categories category = categories::none;
+  uint8_t id = 9;
+  enum categories get_category() override { return category; }
+  uint8_t get_size() override { return size; }
+  enum nodes get_sender() override { return sender; }
+  enum nodes get_receiver() override { return receiver; }
+  uint8_t get_id() override { return id; }
+  void set_address(uint32_t value) { address = value; }
+  uint32_t get_address() { return address; }
+  void build_buf(uint8_t *buf, uint8_t *index) override {
+    memcpy(buf + *index, &address, sizeof(address));
+    *index += sizeof(address);
+  }
+  void parse_buf(uint8_t *buf) override {
+    uint8_t index = 0;
+    memcpy(&address, buf + index, sizeof(address));
+    index += sizeof(address);
+  }
 };
 
 class bmp_from_rocket_to_ground : public MessageBase {
@@ -280,7 +373,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 7;
+  uint8_t id = 10;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -330,7 +423,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 8;
+  uint8_t id = 11;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -406,7 +499,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 9;
+  uint8_t id = 12;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -434,7 +527,7 @@ public:
   enum nodes sender = nodes::ground;
   enum nodes receiver = nodes::rocket;
   enum categories category = categories::none;
-  uint8_t id = 10;
+  uint8_t id = 13;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -462,7 +555,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 11;
+  uint8_t id = 14;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -490,7 +583,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 12;
+  uint8_t id = 15;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -524,7 +617,7 @@ public:
   enum nodes sender = nodes::relay;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 13;
+  uint8_t id = 16;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -558,7 +651,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 14;
+  uint8_t id = 17;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -589,8 +682,14 @@ void rx(simple_calibration_from_ground_to_rocket msg);
 void rx(simple_calibration_from_ground_to_rocket msg, void *misc);
 void rx(mag_calibration_from_ground_to_rocket msg);
 void rx(mag_calibration_from_ground_to_rocket msg, void *misc);
+void rx(wipe_flash_from_ground_to_rocket msg);
+void rx(wipe_flash_from_ground_to_rocket msg, void *misc);
 void rx(play_music_from_ground_to_rocket msg);
 void rx(play_music_from_ground_to_rocket msg, void *misc);
+void rx(set_logging_from_ground_to_rocket msg);
+void rx(set_logging_from_ground_to_rocket msg, void *misc);
+void rx(flash_address_from_rocket_to_ground msg);
+void rx(flash_address_from_rocket_to_ground msg, void *misc);
 void rx(bmp_from_rocket_to_ground msg);
 void rx(bmp_from_rocket_to_ground msg, void *misc);
 void rx(mpu_from_rocket_to_ground msg);

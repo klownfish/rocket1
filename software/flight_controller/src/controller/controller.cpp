@@ -28,8 +28,9 @@ uint32_t flash_addr = 0;
 float ground_level = 0;
 bool error = false;
 bool flash_enabled = false;
+rocket::state rocket_state = rocket::state::sleeping;
+bool negative_z = false;
 
-rocket::state state = rocket::state::sleeping;
 
 uint16_t stateToCycleDelay(enum rocket::state state) {
     switch (state) {
@@ -37,10 +38,18 @@ uint16_t stateToCycleDelay(enum rocket::state state) {
             return ~0; //max
             break;
         case rocket::state::awake:
-            return 1000;
+            return 1000; // once a second
             break;
+        
+        case rocket::state::ready:
+        case rocket::state::falling:
+        case rocket::state::ascending:
+        case rocket::state::landed:
+            return 50;
+            break;
+
         default:
-            return 1; //LIGHT SPEED BABY
+            return ~0; // 20Hz
     }
 }
 
@@ -95,7 +104,7 @@ void restoreFlashAddr() {
 
 void initFlash() {   
     flash.setClock(104000000 / 2);
-    if (!flash.begin()) {
+    if (!flash.begin(MB(16))) {
         Serial.println("Could not init flash chip");
         error = true;
         return;
@@ -173,19 +182,18 @@ void setup() {
         analogWrite(PIN_BUZZER, 0);
     } else {
         // the all good song
-        dance();
+        // dance();
         dispRgb(0, 255, 0);
     }
 }
 
 void loop() {
     static uint32_t last_sample;
-    uint8_t buf[RH_RF69_MAX_MESSAGE_LEN]; 
-    uint8_t len = RH_RF69_MAX_MESSAGE_LEN;
+
     handleDataStreams();
 
     uint32_t time = millis();
-    if (time - last_sample < stateToCycleDelay(state)) {
+    if (time - last_sample < stateToCycleDelay(rocket_state)) {
         return;
     }
     // set current time
@@ -195,15 +203,15 @@ void loop() {
     sendMsg(&msg, ALWAYS);
 
     rocket::state_from_rocket_to_ground state_msg;
-    state_msg.set_state(state);
-    sendMsg(&msg, REGULAR);
+    state_msg.set_state(rocket_state);
+    sendMsg(&state_msg, REGULAR);
 
     if (mpu.available()) {
         mpu.update();
         rocket::mpu_from_rocket_to_ground mpu_msg;
-        mpu_msg.set_acc_x(mpu.getAccX());
-        mpu_msg.set_acc_y(mpu.getAccY());
-        mpu_msg.set_acc_z(mpu.getAccZ());
+        mpu_msg.set_acc_x(mpu.getAccX() * 9.82);
+        mpu_msg.set_acc_y(mpu.getAccY() * 9.82);
+        mpu_msg.set_acc_z(mpu.getAccZ() * 9.82 * (1 - 2 * negative_z));
         mpu_msg.set_mag_x(mpu.getMagX());
         mpu_msg.set_mag_y(mpu.getMagY());
         mpu_msg.set_mag_z(mpu.getMagZ());
@@ -217,4 +225,8 @@ void loop() {
     bmp_msg.set_altitude(bmp.readAltitude() - ground_level);
     bmp_msg.set_temperature(bmp.readTemperature());
     sendMsg(&bmp_msg, REGULAR);
+
+    rocket::flash_address_from_rocket_to_ground flash_msg;
+    flash_msg.set_address(flash_addr);
+    sendMsg(&flash_msg, REGULAR);
 }

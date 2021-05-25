@@ -56,7 +56,6 @@ class TextLastValue(tk.Label):
         self.text = text
         self.stringVar = tk.StringVar()
         self.stringVar.set(text)
-        self.widget = tk.Label(root, textvariable = self.stringVar)
         self.value = value
         self.root = root
         self.update()
@@ -66,14 +65,13 @@ class TextLastValue(tk.Label):
         self.root.after(REFRESH, self.update)    
         if len(self.value.y) == 0:
             return
-        self.stringVar.set(self.text + str(self.value.y[-1]))
+        self.stringVar.set(self.text + '%.2f' % self.value.y[-1])
 
 class EnumLastValue(tk.Label):
     def __init__(self, root, text, value, **kwargs):
         self.text = text
         self.stringVar = tk.StringVar()
         self.stringVar.set(text)
-        self.widget = tk.Label(root, textvariable = self.stringVar)
         self.value = value
         self.root = root
         self.update()
@@ -140,3 +138,26 @@ class MagCalibration(tk.Frame):
     def update(self):
         num = float(self.text.get("1.0", "end"))
         self.gw.calibrate_mag(num)
+
+class FlashUsed(tk.Label):
+    def __init__(self, root, gw, **settings):
+        self.gw = gw
+        self.stringVar = tk.StringVar()
+        super().__init__(root, textvariable = self.stringVar)
+
+
+class FlashUsed(tk.Label):
+    def __init__(self, root, gw, **kwargs):
+        self.stringVar = tk.StringVar()
+        self.stringVar.set("flash used:")
+        self.root = root
+        self.value = gw.data["rocket"]["flash_address"]["address"]
+        self.update()
+        super().__init__(root, textvariable = self.stringVar)
+
+    def update(self):
+        self.root.after(REFRESH, self.update)    
+        if len(self.value.y) == 0:
+            return
+        # 128MiBit
+        self.stringVar.set('flash used: %.2f' % (100 * self.value.y[-1] /  16777216) + "%")

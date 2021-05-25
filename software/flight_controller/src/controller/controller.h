@@ -15,5 +15,6 @@ extern MPU9250 mpu;
 extern uint32_t flash_addr;
 extern float ground_level;
 extern bool error;
-extern rocket::state state;
+extern rocket::state rocket_state;
 extern bool flash_enabled;
+extern bool negative_z;

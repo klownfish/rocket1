@@ -27,7 +27,7 @@ FLASH_TIMESTAMP = 2
 #open_serial() - open the serial connection
 class SerialWrapper():
     def __init__(self, device):
-        self.ser = serial.Serial()
+        self.ser = serial.Serial(timeout=1)
         self.device = device
         #get file name
         now = datetime.now()
@@ -190,6 +190,8 @@ class SerialReader():
 
     #opens a file that has been saved from this very program
     def open_backup_file(self, path):
+        if self.is_serial_open():
+            return
         self.time_sync_state = BACKUP_TIMESTAMP
         self.start_time = None 
         self.stream = open(path, "r+b")
@@ -197,6 +199,8 @@ class SerialReader():
 
     #opens a file dumped from the flash chip
     def open_flash_file(self, path):
+        if self.is_serial_open():
+            return
         self.time_sync_state = FLASH_TIMESTAMP
         self.start_time = None
         self.stream = open(path, "r+b")
@@ -204,6 +208,8 @@ class SerialReader():
 
     #opens the serial connection
     def open_serial(self):
+        if self.is_serial_open():
+            return
         self.time_sync_state = LIVE
         self.ser = SerialWrapper(self.device)
         result = self.ser.open_serial()
@@ -269,7 +275,7 @@ class SerialReader():
                 self.read_fc_data(fc_decoder)
             else:
                 print("invalid id: ", frame_id)
-            
+
     def read_fc_data(self, decoder):
         length = decoder.get_size()
         buf = self.stream.read(length)
@@ -334,4 +340,23 @@ class Gateway(SerialReader):
     def calibrate_mag(self, declination):
         msg = protocol.mag_calibration_from_ground_to_rocket()
         msg.set_declination(declination)
+        self._send_message(msg)
+    
+    def play_music(self):
+        msg = protocol.play_music_from_ground_to_rocket()
+        self._send_message(msg)
+    
+    def wipe_flash(self):
+        msg = protocol.wipe_flash_from_ground_to_rocket()
+        msg.set_this_to_42(42)
+        self._send_message(msg)
+    
+    def enable_logging(self):
+        msg = protocol.set_logging_from_ground_to_rocket()
+        msg.set_is_enabled(True)
+        self._send_message(msg)
+
+    def disable_logging(self):
+        msg = protocol.set_logging_from_ground_to_rocket()
+        msg.set_is_enabled(False)
         self._send_message(msg)

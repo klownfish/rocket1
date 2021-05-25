@@ -25,7 +25,11 @@ def main():
     rssi = TextLastValue(settings, "rssi rocket: ", gw.data["rocket"]["rssi"]["rssi"])
     rssi_gw = TextLastValue(settings, "rssi gateway: ", gw.data["relay"]["rssi"]["rssi"])
     temperature = TextLastValue(settings, "temperature: ", gw.data["rocket"]["bmp"]["temperature"])
-    
+    wipe_flash = tk.Button(settings, text = "wipe flash", command= gw.wipe_flash, **padding)
+    flash_index = FlashUsed(settings, gw, **padding)
+    enable_logging = tk.Button(settings, text = "enable logging", command= gw.enable_logging, **padding)
+    disable_logging = tk.Button(settings, text = "disable logging", command= gw.disable_logging, **padding)
+
     altitude = AltitudeGraph(root, gw)
     gyro = GyroGraph(root, gw)
     acceleration = AccelerationGraph(root, gw)
@@ -37,16 +41,21 @@ def main():
     sleep.grid(column = 0, row = 5)
     wake_up.grid(column = 0, row = 6)
     get_ready.grid(column = 0, row = 7)
+    wipe_flash.grid(column = 0, row = 8)
+    enable_logging.grid(column = 0, row = 9)
+    disable_logging.grid(column = 0, row = 10)
+    
 
     state.grid(column = 1, row = 0)
     voltage.grid(column = 1, row = 1)
     rssi.grid(column = 1, row = 2)
     rssi_gw.grid(column = 1, row = 3)
-    temperature.grid(column = 1, row = 6)
+    temperature.grid(column = 1, row = 4)
+    flash_index.grid(column = 1, row = 5)
+
     altitude.widget.grid(column = 0, row = 0, **padding)
     gyro.widget.grid(column = 0, row = 1, **padding)
     acceleration.widget.grid(column = 1, row = 0, **padding)
-
     settings.grid(column = 1,row = 1)
     def on_close():
         gw.stop()
