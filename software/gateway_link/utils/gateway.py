@@ -351,6 +351,11 @@ class Gateway(SerialReader):
         msg.set_this_to_42(42)
         self._send_message(msg)
     
+    def dump_flash(self):
+        self.pause()
+        time.sleep(2)
+        self.resume()
+    
     def enable_logging(self):
         msg = protocol.set_logging_from_ground_to_rocket()
         msg.set_is_enabled(True)

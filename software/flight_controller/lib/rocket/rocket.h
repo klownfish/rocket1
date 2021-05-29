@@ -57,14 +57,15 @@ enum struct messages : uint8_t {
   wipe_flash = 5,
   play_music = 6,
   set_logging = 7,
-  flash_address = 8,
-  bmp = 9,
-  mpu = 10,
-  battery_voltage = 11,
-  set_state = 12,
-  state = 13,
-  rssi = 14,
-  ms_since_boot = 15,
+  dump_flash = 8,
+  flash_address = 9,
+  bmp = 10,
+  mpu = 11,
+  battery_voltage = 12,
+  set_state = 13,
+  state = 14,
+  rssi = 15,
+  ms_since_boot = 16,
 };
 enum struct categories : uint8_t {
   none = 0,
@@ -334,6 +335,23 @@ public:
   }
 };
 
+class dump_flash_from_ground_to_rocket : public MessageBase {
+public:
+  uint8_t size = 0;
+  enum messages message = messages::dump_flash;
+  enum nodes sender = nodes::ground;
+  enum nodes receiver = nodes::rocket;
+  enum categories category = categories::none;
+  uint8_t id = 9;
+  enum categories get_category() override { return category; }
+  uint8_t get_size() override { return size; }
+  enum nodes get_sender() override { return sender; }
+  enum nodes get_receiver() override { return receiver; }
+  uint8_t get_id() override { return id; }
+  void build_buf(uint8_t *buf, uint8_t *index) override {}
+  void parse_buf(uint8_t *buf) override {}
+};
+
 class flash_address_from_rocket_to_ground : public MessageBase {
 public:
   uint32_t address;
@@ -343,7 +361,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 9;
+  uint8_t id = 10;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -373,7 +391,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 10;
+  uint8_t id = 11;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -423,7 +441,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 11;
+  uint8_t id = 12;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -499,7 +517,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 12;
+  uint8_t id = 13;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -527,7 +545,7 @@ public:
   enum nodes sender = nodes::ground;
   enum nodes receiver = nodes::rocket;
   enum categories category = categories::none;
-  uint8_t id = 13;
+  uint8_t id = 14;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -555,7 +573,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 14;
+  uint8_t id = 15;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -583,7 +601,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 15;
+  uint8_t id = 16;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -617,7 +635,7 @@ public:
   enum nodes sender = nodes::relay;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 16;
+  uint8_t id = 17;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -651,7 +669,7 @@ public:
   enum nodes sender = nodes::rocket;
   enum nodes receiver = nodes::ground;
   enum categories category = categories::none;
-  uint8_t id = 17;
+  uint8_t id = 18;
   enum categories get_category() override { return category; }
   uint8_t get_size() override { return size; }
   enum nodes get_sender() override { return sender; }
@@ -688,6 +706,8 @@ void rx(play_music_from_ground_to_rocket msg);
 void rx(play_music_from_ground_to_rocket msg, void *misc);
 void rx(set_logging_from_ground_to_rocket msg);
 void rx(set_logging_from_ground_to_rocket msg, void *misc);
+void rx(dump_flash_from_ground_to_rocket msg);
+void rx(dump_flash_from_ground_to_rocket msg, void *misc);
 void rx(flash_address_from_rocket_to_ground msg);
 void rx(flash_address_from_rocket_to_ground msg, void *misc);
 void rx(bmp_from_rocket_to_ground msg);

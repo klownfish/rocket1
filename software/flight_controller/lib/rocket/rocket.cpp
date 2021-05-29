@@ -33,6 +33,9 @@ __attribute__((weak)) void rx(play_music_from_ground_to_rocket msg,
 __attribute__((weak)) void rx(set_logging_from_ground_to_rocket msg) {}
 __attribute__((weak)) void rx(set_logging_from_ground_to_rocket msg,
                               void *misc) {}
+__attribute__((weak)) void rx(dump_flash_from_ground_to_rocket msg) {}
+__attribute__((weak)) void rx(dump_flash_from_ground_to_rocket msg,
+                              void *misc) {}
 __attribute__((weak)) void rx(flash_address_from_rocket_to_ground msg) {}
 __attribute__((weak)) void rx(flash_address_from_rocket_to_ground msg,
                               void *misc) {}
@@ -112,54 +115,60 @@ void parse_message(uint8_t id, uint8_t *buf) {
     break;
   }
   case 9: {
-    flash_address_from_rocket_to_ground __message;
+    dump_flash_from_ground_to_rocket __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 10: {
-    bmp_from_rocket_to_ground __message;
+    flash_address_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 11: {
-    mpu_from_rocket_to_ground __message;
+    bmp_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 12: {
-    battery_voltage_from_rocket_to_ground __message;
+    mpu_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 13: {
-    set_state_from_ground_to_rocket __message;
+    battery_voltage_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 14: {
-    state_from_rocket_to_ground __message;
+    set_state_from_ground_to_rocket __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 15: {
-    rssi_from_rocket_to_ground __message;
+    state_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 16: {
-    rssi_from_relay_to_ground __message;
+    rssi_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message);
     break;
   }
   case 17: {
+    rssi_from_relay_to_ground __message;
+    __message.parse_buf(buf);
+    rx(__message);
+    break;
+  }
+  case 18: {
     ms_since_boot_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message);
@@ -225,54 +234,60 @@ void parse_message(uint8_t id, uint8_t *buf, void *misc) {
     break;
   }
   case 9: {
-    flash_address_from_rocket_to_ground __message;
+    dump_flash_from_ground_to_rocket __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 10: {
-    bmp_from_rocket_to_ground __message;
+    flash_address_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 11: {
-    mpu_from_rocket_to_ground __message;
+    bmp_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 12: {
-    battery_voltage_from_rocket_to_ground __message;
+    mpu_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 13: {
-    set_state_from_ground_to_rocket __message;
+    battery_voltage_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 14: {
-    state_from_rocket_to_ground __message;
+    set_state_from_ground_to_rocket __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 15: {
-    rssi_from_rocket_to_ground __message;
+    state_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 16: {
-    rssi_from_relay_to_ground __message;
+    rssi_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message, misc);
     break;
   }
   case 17: {
+    rssi_from_relay_to_ground __message;
+    __message.parse_buf(buf);
+    rx(__message, misc);
+    break;
+  }
+  case 18: {
     ms_since_boot_from_rocket_to_ground __message;
     __message.parse_buf(buf);
     rx(__message, misc);
@@ -337,6 +352,9 @@ bool is_valid_id(uint8_t id) {
   case 17:
     return true;
     break;
+  case 18:
+    return true;
+    break;
   default:
     return false;
   }
@@ -372,30 +390,33 @@ uint8_t id_to_len(uint8_t id) {
     return 1;
     break;
   case 9:
-    return 4;
+    return 0;
     break;
   case 10:
-    return 8;
-    break;
-  case 11:
-    return 36;
-    break;
-  case 12:
     return 4;
     break;
+  case 11:
+    return 8;
+    break;
+  case 12:
+    return 36;
+    break;
   case 13:
-    return 1;
+    return 4;
     break;
   case 14:
     return 1;
     break;
   case 15:
-    return 2;
+    return 1;
     break;
   case 16:
     return 2;
     break;
   case 17:
+    return 2;
+    break;
+  case 18:
     return 4;
     break;
   default:
@@ -433,7 +454,7 @@ enum nodes id_to_sender(uint8_t id) {
     return nodes::ground;
     break;
   case 9:
-    return nodes::rocket;
+    return nodes::ground;
     break;
   case 10:
     return nodes::rocket;
@@ -445,18 +466,21 @@ enum nodes id_to_sender(uint8_t id) {
     return nodes::rocket;
     break;
   case 13:
-    return nodes::ground;
+    return nodes::rocket;
     break;
   case 14:
-    return nodes::rocket;
+    return nodes::ground;
     break;
   case 15:
     return nodes::rocket;
     break;
   case 16:
-    return nodes::relay;
+    return nodes::rocket;
     break;
   case 17:
+    return nodes::relay;
+    break;
+  case 18:
     return nodes::rocket;
     break;
   }
@@ -492,7 +516,7 @@ enum nodes id_to_receiver(uint8_t id) {
     return nodes::rocket;
     break;
   case 9:
-    return nodes::ground;
+    return nodes::rocket;
     break;
   case 10:
     return nodes::ground;
@@ -504,10 +528,10 @@ enum nodes id_to_receiver(uint8_t id) {
     return nodes::ground;
     break;
   case 13:
-    return nodes::rocket;
+    return nodes::ground;
     break;
   case 14:
-    return nodes::ground;
+    return nodes::rocket;
     break;
   case 15:
     return nodes::ground;
@@ -516,6 +540,9 @@ enum nodes id_to_receiver(uint8_t id) {
     return nodes::ground;
     break;
   case 17:
+    return nodes::ground;
+    break;
+  case 18:
     return nodes::ground;
     break;
   }
@@ -575,6 +602,9 @@ enum categories id_to_category(uint8_t id) {
     return categories::none;
     break;
   case 17:
+    return categories::none;
+    break;
+  case 18:
     return categories::none;
     break;
   }

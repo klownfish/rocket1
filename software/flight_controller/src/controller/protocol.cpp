@@ -127,7 +127,7 @@ void rocket::rx(rocket::play_music_from_ground_to_rocket msg) {
 
 void rocket::rx(rocket::wipe_flash_from_ground_to_rocket msg) {
     if (msg.get_this_to_42() != 42) return;
-    dispRgb(255, 128, 255);
+    dispRgb(255, 128, 128);
     flash.eraseChip();
     flash_addr = 0;
     dispRgb(0, 255, 0);
@@ -135,4 +135,16 @@ void rocket::rx(rocket::wipe_flash_from_ground_to_rocket msg) {
 
 void rocket::rx(rocket::set_logging_from_ground_to_rocket msg) {
     flash_enabled = msg.get_is_enabled();
+}
+
+void rocket::rx(rocket::dump_flash_from_ground_to_rocket msg) {
+    dispRgb(255, 128, 128);
+    uint8_t buf[256];
+    delay(1000);
+    for (uint32_t i = 0; i < flash_addr; i += 256) {
+        flash.readByteArray(i, buf, 256);
+        Serial.write(buf, 256);
+    }
+    delay(5000);
+    dispRgb(0, 255, 0);
 }

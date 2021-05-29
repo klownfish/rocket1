@@ -29,6 +29,7 @@ def main():
     flash_index = FlashUsed(settings, gw, **padding)
     enable_logging = tk.Button(settings, text = "enable logging", command= gw.enable_logging, **padding)
     disable_logging = tk.Button(settings, text = "disable logging", command= gw.disable_logging, **padding)
+    play_music = tk.Button(settings, text = "play music", command= gw.play_music, **padding)
 
     altitude = AltitudeGraph(root, gw)
     gyro = GyroGraph(root, gw)
@@ -44,7 +45,7 @@ def main():
     wipe_flash.grid(column = 0, row = 8)
     enable_logging.grid(column = 0, row = 9)
     disable_logging.grid(column = 0, row = 10)
-    
+    play_music.grid(column= 0, row = 11)    
 
     state.grid(column = 1, row = 0)
     voltage.grid(column = 1, row = 1)

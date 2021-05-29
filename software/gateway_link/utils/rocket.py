@@ -71,14 +71,15 @@ class messages(Enum):
     wipe_flash = 5
     play_music = 6
     set_logging = 7
-    flash_address = 8
-    bmp = 9
-    mpu = 10
-    battery_voltage = 11
-    set_state = 12
-    state = 13
-    rssi = 14
-    ms_since_boot = 15
+    dump_flash = 8
+    flash_address = 9
+    bmp = 10
+    mpu = 11
+    battery_voltage = 12
+    set_state = 13
+    state = 14
+    rssi = 15
+    ms_since_boot = 16
 class categories(Enum):
     none = 0
 class local_timestamp_from_local_to_local:
@@ -387,13 +388,42 @@ class set_logging_from_ground_to_rocket:
         self._bit_field = struct.unpack_from("<B", buf, index)[0]
         index += 1
         return
+class dump_flash_from_ground_to_rocket:
+    def __init__(self):
+        self._sender = nodes.ground
+        self._receiver = nodes.rocket
+        self._message = messages.dump_flash
+        self._category = categories.none
+        self._id = 9
+        self._size = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def build_buf(self):
+        buf = b""
+        return buf
+    def get_all_data(self):
+        data = []
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        return
 class flash_address_from_rocket_to_ground:
     def __init__(self):
         self._sender = nodes.rocket
         self._receiver = nodes.ground
         self._message = messages.flash_address
         self._category = categories.none
-        self._id = 9
+        self._id = 10
         self._size = 4
         self._address = 0
     def get_sender(self):
@@ -431,7 +461,7 @@ class bmp_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.bmp
         self._category = categories.none
-        self._id = 10
+        self._id = 11
         self._size = 8
         self._altitude = 0
         self._temperature = 0
@@ -478,7 +508,7 @@ class mpu_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.mpu
         self._category = categories.none
-        self._id = 11
+        self._id = 12
         self._size = 36
         self._acc_x = 0
         self._acc_y = 0
@@ -588,7 +618,7 @@ class battery_voltage_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.battery_voltage
         self._category = categories.none
-        self._id = 12
+        self._id = 13
         self._size = 4
         self._voltage = 0
     def get_sender(self):
@@ -626,7 +656,7 @@ class set_state_from_ground_to_rocket:
         self._receiver = nodes.rocket
         self._message = messages.set_state
         self._category = categories.none
-        self._id = 13
+        self._id = 14
         self._size = 1
         self._state = 0
     def get_sender(self):
@@ -664,7 +694,7 @@ class state_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.state
         self._category = categories.none
-        self._id = 14
+        self._id = 15
         self._size = 1
         self._state = 0
     def get_sender(self):
@@ -702,7 +732,7 @@ class rssi_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.rssi
         self._category = categories.none
-        self._id = 15
+        self._id = 16
         self._size = 2
         self._rssi = 0
     def get_sender(self):
@@ -740,7 +770,7 @@ class rssi_from_relay_to_ground:
         self._receiver = nodes.ground
         self._message = messages.rssi
         self._category = categories.none
-        self._id = 16
+        self._id = 17
         self._size = 2
         self._rssi = 0
     def get_sender(self):
@@ -778,7 +808,7 @@ class ms_since_boot_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.ms_since_boot
         self._category = categories.none
-        self._id = 17
+        self._id = 18
         self._size = 4
         self._ms_since_boot = 0
     def get_sender(self):
@@ -839,29 +869,32 @@ def id_to_message_class(id):
         receiver = set_logging_from_ground_to_rocket()
         return receiver
     if id == 9:
-        receiver = flash_address_from_rocket_to_ground()
+        receiver = dump_flash_from_ground_to_rocket()
         return receiver
     if id == 10:
-        receiver = bmp_from_rocket_to_ground()
+        receiver = flash_address_from_rocket_to_ground()
         return receiver
     if id == 11:
-        receiver = mpu_from_rocket_to_ground()
+        receiver = bmp_from_rocket_to_ground()
         return receiver
     if id == 12:
-        receiver = battery_voltage_from_rocket_to_ground()
+        receiver = mpu_from_rocket_to_ground()
         return receiver
     if id == 13:
-        receiver = set_state_from_ground_to_rocket()
+        receiver = battery_voltage_from_rocket_to_ground()
         return receiver
     if id == 14:
-        receiver = state_from_rocket_to_ground()
+        receiver = set_state_from_ground_to_rocket()
         return receiver
     if id == 15:
-        receiver = rssi_from_rocket_to_ground()
+        receiver = state_from_rocket_to_ground()
         return receiver
     if id == 16:
-        receiver = rssi_from_relay_to_ground()
+        receiver = rssi_from_rocket_to_ground()
         return receiver
     if id == 17:
+        receiver = rssi_from_relay_to_ground()
+        return receiver
+    if id == 18:
         receiver = ms_since_boot_from_rocket_to_ground()
         return receiver

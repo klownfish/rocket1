@@ -1,4 +1,4 @@
-19096182848648272
+19213765305646272
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -82974,6 +82974,20 @@ custom
 LED_D5.0mm-4_RGB
 LED, diameter 5.0mm, 2 pins, diameter 5.0mm, 3 pins, diameter 5.0mm, 4 pins, http://www.kingbright.com/attachments/file/psearch/000/00/00/L-154A4SUREQBFZGEW(Ver.9A).pdf
 LED diameter 5.0mm 2 pins diameter 5.0mm 3 pins diameter 5.0mm 4 pins RGB RGBLED
+0
+4
+4
+custom
+VXO78-500-M
+
+
+0
+0
+0
+custom
+VXO7805-500-M
+
+
 0
 4
 4
