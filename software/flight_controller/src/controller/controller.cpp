@@ -6,6 +6,7 @@
 #include <RH_RF69.h>
 #include <Adafruit_BMP280.h>
 #include <elapsedMillis.h>
+#include <FlexCAN_T4.h>
 
 #include "MPU9250.h"
 #include "definitions.h" // pin and protocol definitions
@@ -14,6 +15,10 @@
 
 void megalovania(); //haha lolz
 void dance();
+
+
+FlexCAN_T4<CAN1, RX_SIZE_16, TX_SIZE_16> can;
+static CAN_message_t canMsg;
 
 #define FLASH_TEST_BYTES 10
 
@@ -60,6 +65,8 @@ void dispRgb(uint8_t R, uint8_t G, uint8_t B) {
 }
 
 void initPins() {
+    can.begin();
+    can.setBaudRate(1000000);
     pinMode(PIN_RF_CS, OUTPUT);
     pinMode(PIN_BAT_READ, INPUT);
     pinMode(PIN_RF_RST, OUTPUT);
@@ -189,7 +196,10 @@ void setup() {
 
 void loop() {
     static uint32_t last_sample;
-
+    canMsg.buf[0] = 42;
+    canMsg.len = 1;
+    can.write(canMsg);
+    return;
     handleDataStreams();
 
     uint32_t time = millis();
