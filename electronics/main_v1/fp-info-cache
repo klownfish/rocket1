@@ -1,4 +1,4 @@
-19241309415731272
+19249434816291272
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -82957,6 +82957,13 @@ Adafruit-RFM69
 9
 9
 custom
+CX-0905C
+
+
+0
+2
+2
+custom
 GY91
 
 
@@ -82984,6 +82991,13 @@ LED diameter 5.0mm 2 pins diameter 5.0mm 3 pins diameter 5.0mm 4 pins RGB RGBLED
 0
 4
 4
+custom
+R_1812_4532Metric_Pad1.30x3.40mm_HandSolder_no_silk
+Resistor SMD 1812 (4532 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: https://www.nikhef.nl/pub/departments/mt/projects/detectorR_D/dtddice/ERJ2G.pdf), generated with kicad-footprint-generator
+resistor handsolder
+0
+2
+2
 custom
 SC-74-a
 SC-74, 6 Pin (https://www.nxp.com/docs/en/package-information/SOT457.pdf), generated with kicad-footprint-generator ipc_gullwing_generator.py
@@ -83041,12 +83055,33 @@ buzzer
 2
 2
 custom
+d2pak_heatsink
+26x13 mm SMD heatsink for TO-252 TO-263 TO-268, https://www.fischerelektronik.de/pim/upload/fischerData/cadpdf/base/fk_244_13_d2_pak.pdf
+heatsink TO-252 TO-263 TO-268
+0
+2
+1
+custom
+drotek_10dof
+
+
+0
+8
+8
+custom
 logo
 
 
 0
 0
 0
+custom
+sparkfun_H3LIS331DL
+
+
+0
+8
+8
 custom
 teensy4
 

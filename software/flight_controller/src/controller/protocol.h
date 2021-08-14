@@ -3,7 +3,8 @@
 enum send_when {
     NEVER,
     ALWAYS,
-    REGULAR
+    REGULAR,
+    OFFLINE
 };
 
 void handleDataStreams();

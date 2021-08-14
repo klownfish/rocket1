@@ -20,6 +20,10 @@ enum receiver_state {
 
 class DataProtocol {
 public:
+  DataProtocol(void) {}
+  DataProtocol(void (*func)(uint8_t id, uint8_t* buf, uint8_t len)) {
+    callback = func;
+  }
   void set_callback(void (*func)(uint8_t id, uint8_t* buf, uint8_t len)){
     callback=func;
   }

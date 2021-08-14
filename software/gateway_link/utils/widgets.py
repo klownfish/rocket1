@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from time import time
 
-REFRESH = 16
+REFRESH = 50
 
 VIEWRANGE = 30
 ##################
@@ -21,7 +21,7 @@ class GenericGraph():
     def __init__(self, root, clock, time_series, width = 9, height = 5):
         self.clock = clock
         self.time_series = time_series
-        self.fig = plt.Figure(figsize=(width, height), dpi=100)
+        self.fig = plt.Figure(figsize=(width, height), dpi=100, tight_layout=True)
         self.ax = self.fig.add_subplot(111)    
         self.lines = []
         #create a line for every series
@@ -98,21 +98,21 @@ class ButtonFile(tk.Button):
 class GyroGraph(GenericGraph):
     def __init__(self, root, gw):
         dataLists = [
-            gw.data["rocket"]["mpu"]["gyro_x"],
-            gw.data["rocket"]["mpu"]["gyro_y"],
-            gw.data["rocket"]["mpu"]["gyro_z"]
+            gw.data["rocket"]["estimate"]["gyro_x"],
+            gw.data["rocket"]["estimate"]["gyro_y"],
+            gw.data["rocket"]["estimate"]["gyro_z"]
         ]
         super().__init__(root, gw.get_current_time, dataLists)
-        self.ax.set_ylim(-360, 360)
+        self.ax.set_ylim(-6.28, 6.28)
         self.ax.set_title("rotation - radians/s")
         self.ax.axhline(0, color='gray')
 
 class AccelerationGraph(GenericGraph):
     def __init__(self, root, gw):
         dataLists = [
-            gw.data["rocket"]["mpu"]["acc_x"],
-            gw.data["rocket"]["mpu"]["acc_y"],
-            gw.data["rocket"]["mpu"]["acc_z"],
+            gw.data["rocket"]["estimate"]["ax"],
+            gw.data["rocket"]["estimate"]["ay"],
+            gw.data["rocket"]["estimate"]["az"],
         ]
         super().__init__(root, gw.get_current_time, dataLists)
         self.ax.set_ylim(-20, 20)
@@ -121,7 +121,7 @@ class AccelerationGraph(GenericGraph):
 
 class AltitudeGraph(GenericGraph):
     def __init__(self, root, gw):
-        super().__init__(root, gw.get_current_time, [gw.data["rocket"]["bmp"]["altitude"]])
+        super().__init__(root, gw.get_current_time, [gw.data["rocket"]["estimate"]["altitude"]])
         self.ax.set_ylim(-5, 50)
         self.ax.set_title("altitude - m")
 

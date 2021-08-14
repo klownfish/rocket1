@@ -6,89 +6,91 @@
 #include <RH_RF69.h>
 #include <Adafruit_BMP280.h>
 #include <elapsedMillis.h>
-#include <FlexCAN_T4.h>
+#include <WS2812Serial.h>
+#include <Adafruit_NeoPixel.h>
 
 #include "MPU9250.h"
 #include "definitions.h" // pin and protocol definitions
+#include "controller.h"
 #include "rocket.h"
 #include "protocol.h"
+#include "Estimator.h"
+#include "Sampler.h"
 
-void megalovania(); //haha lolz
+//haha lolz
 void dance();
-
-
-FlexCAN_T4<CAN1, RX_SIZE_16, TX_SIZE_16> can;
-static CAN_message_t canMsg;
 
 #define FLASH_TEST_BYTES 10
 
-#define MAGNETOMETER_OFFSET_ADDR 0
+#define GPS_BAUD 9600
+
+byte drawingMemory[3];         //  3 bytes per LED
+DMAMEM byte displayMemory[12]; // 12 bytes per LED
+WS2812Serial rgb(1, displayMemory, drawingMemory, PIN_RGB_TX, WS2812_RGB);
 
 RH_RF69 radio {PIN_RF_CS, PIN_RF_G0}; 
 SPIFlash flash {PIN_FLASH_CS};
 Adafruit_BMP280 bmp;
 MPU9250 mpu;
+GPS gps;
+
+Estimator estimator;
+
+Sampler sampler;
 
 uint32_t flash_addr = 0;
-float ground_level = 0;
 bool error = false;
 bool flash_enabled = false;
 rocket::state rocket_state = rocket::state::sleeping;
-bool negative_z = false;
 
-
-uint16_t stateToCycleDelay(enum rocket::state state) {
+uint16_t stateToTimeDiv(enum rocket::state state) {
     switch (state) {
         case rocket::state::sleeping:
-            return ~0; //max
+            return 10000;
             break;
         case rocket::state::awake:
-            return 1000; // once a second
+            return 20;
             break;
         
         case rocket::state::ready:
+        case rocket::state::debug:
         case rocket::state::falling:
-        case rocket::state::ascending:
+        case rocket::state::powered_flight:
+        case rocket::state::passive_flight:
         case rocket::state::landed:
-            return 50;
+            return 1;
             break;
 
         default:
-            return ~0; // 20Hz
+            return 10000;
     }
 }
 
-void dispRgb(uint8_t R, uint8_t G, uint8_t B) {
-    analogWrite(PIN_LED_R, R / 16); // this led is so bright...
-    analogWrite(PIN_LED_G, G / 16);
-    analogWrite(PIN_LED_B, B / 16);
-}
-
 void initPins() {
-    can.begin();
-    can.setBaudRate(1000000);
     pinMode(PIN_RF_CS, OUTPUT);
     pinMode(PIN_BAT_READ, INPUT);
     pinMode(PIN_RF_RST, OUTPUT);
     pinMode(PIN_FLASH_CS, OUTPUT);
-    pinMode(PIN_FLASH_WP, OUTPUT);
-    pinMode(PIN_FLASH_HOLD, OUTPUT);
-    pinMode(PIN_LED_R, OUTPUT);
-    pinMode(PIN_LED_G, OUTPUT);
-    pinMode(PIN_LED_B, OUTPUT);
     pinMode(PIN_BUZZER, OUTPUT);
-
+    pinMode(PIN_PYRO_ARM, OUTPUT);
+    pinMode(PIN_PYRO_1, OUTPUT);
+    pinMode(PIN_PYRO_2, OUTPUT);
+    pinMode(PIN_PYRO_3, OUTPUT);
+    pinMode(PIN_PYRO_4, OUTPUT);
+    
     SPI.setMISO(PIN_MISO);
     SPI.setMOSI(PIN_MOSI);
     SPI.setSCK(PIN_SCK);
     SPI.begin();
     Wire.begin();
+    Wire.setClock(400000);
+    analogReadResolution(12);
 
-    analogWriteFrequency(PIN_BUZZER, 3000);
+    analogWriteFrequency(PIN_BUZZER, BUZZER_HZ);
     digitalWrite(PIN_RF_CS, HIGH);
+    digitalWrite(PIN_PYRO_4, LOW);
     digitalWrite(PIN_FLASH_CS, HIGH);
-    digitalWrite(PIN_FLASH_WP, HIGH);
-    digitalWrite(PIN_FLASH_HOLD, HIGH);
+    digitalWrite(PIN_PYRO_ARM, HIGH);
     delay(100);
 }
 
@@ -140,13 +142,23 @@ void initRadio() {
     }
     radio.setFrequency(FREQUENCY);
     radio.setTxPower(TX_POWER, true);
+    radio.setModemConfig(MODULATION);
     if (IS_HAM) { 
         radio.send(CALLSIGN, sizeof(CALLSIGN));
     }
 }
 
 void initMpu() {
-    if (!mpu.setup(0x68)) {
+    MPU9250Setting settings;
+    settings.fifo_sample_rate = FIFO_SAMPLE_RATE::SMPL_125HZ;
+    settings.gyro_fs_sel = GYRO_FS_SEL::G250DPS;
+    settings.gyro_dlpf_cfg = GYRO_DLPF_CFG::DLPF_10HZ;
+    settings.accel_fs_sel = ACCEL_FS_SEL::A4G;
+    settings.accel_dlpf_cfg = ACCEL_DLPF_CFG::DLPF_10HZ;
+    mpu.selectFilter(QuatFilterSel::NONE);
+    mpu.ahrs(false);
+
+    if (!mpu.setup(0x68, settings, Wire)) {
         Serial.println("could not initialize MPU");
         error = true;
         return;
@@ -160,83 +172,165 @@ void initBmp() {
     }
 }
 
-void calibrateHeight() {
-    ground_level = bmp.readAltitude();
+void sampleGpsPosition(void*) {
+    rocket::gps_pos_from_rocket_to_ground msg;
+    if (gps.is_set(FLAG_ALTITUDE) && gps.is_set(FLAG_LONGITUDE) && gps.is_set(FLAG_LATITUDE)) {
+        msg.set_altitude(gps.altitude);
+        msg.set_longitude(gps.longitude_degrees + gps.longitude_minutes / 60);
+        msg.set_latitude(gps.latitude_degrees + gps.latitude_minutes / 60);
+        sendMsg(&msg, send_when::REGULAR);
+    }
 }
 
-float readBatteryVoltage() {
-    analogReadResolution(12);
+void sampleGpsState(void*) {
+    rocket::gps_state_from_rocket_to_ground msg;
+    if (gps.is_set(FLAG_FIX_STATUS)) {
+        switch (gps.fix_status) {
+            case 1:
+                msg.set_fix_type(rocket::fix_type::none);
+                break;
+            case 2:
+                msg.set_fix_type(rocket::fix_type::fix2D);
+                break;
+            case 3:
+                msg.set_fix_type(rocket::fix_type::fix3D);
+                break;
+            default:
+                msg.set_fix_type(rocket::fix_type::none);
+                break;
+        }
+    } else {
+        msg.set_fix_type(rocket::fix_type::none);
+    }
+
+    if (gps.is_set(FLAG_PDOP)) {
+        msg.set_pdop(gps.pdop);
+    } else {
+        msg.set_pdop(0);
+    }
+
+    if (gps.is_set(FLAG_N_SATELLITES)) {
+        msg.set_n_satellites(gps.n_satellites);
+    } else {
+        msg.set_n_satellites(0);
+    }
+
+    sendMsg(&msg, send_when::REGULAR);
+}
+
+void sampleMpu(void*) {
+    rocket::mpu_from_rocket_to_ground msg;
+
+    static uint32_t last_update = micros();
+    if (!mpu.update()) return;
+    float ax = mpu.getAccX();
+    float ay = mpu.getAccY();
+    float az = mpu.getAccZ();
+    float gx = mpu.getGyroX();
+    float gy = mpu.getGyroY();
+    float gz = mpu.getGyroZ();
+
+    estimator.update_imu(ax, ay, az, gx, gy, gz, (micros() - last_update) / 1000000);
+    msg.set_acc_x(ax);
+    msg.set_acc_y(ay);
+    msg.set_acc_z(az);
+    msg.set_gyro_x(gx);
+    msg.set_gyro_y(gy);
+    msg.set_gyro_z(gz);
+    last_update = micros();
+    sendMsg(&msg, REGULAR);
+}
+
+void sampleBmp(void*) {
+    static uint32_t last_update = micros();
+    rocket::bmp_from_rocket_to_ground bmp_msg;
+    bmp_msg.set_pressure(bmp.readPressure());
+    bmp_msg.set_temperature(bmp.readTemperature());
+    estimator.update_altitude(bmp.readAltitude(), 0);
+    sendMsg(&bmp_msg, REGULAR);
+}
+
+void sampleBatteryVoltage(void*) {
+    rocket::battery_voltage_from_rocket_to_ground battery_msg;
     float volt = (float) analogRead(PIN_BAT_READ);
-    return volt / ((1 << 12) - 1) * 3.3 * 2;   
+    volt = volt / ((1 << 12) - 1) * 3.3 * (6.04e3 + 2e3) / (2e3);   
+    battery_msg.set_voltage(volt);
+    sendMsg(&battery_msg, REGULAR);
+}
+
+void sampleFlashMemory(void*) {
+    rocket::flash_address_from_rocket_to_ground flash_msg;
+    flash_msg.set_address(flash_addr);
+    sendMsg(&flash_msg, REGULAR);
+}
+
+void sampleState(void*) {
+    rocket::state_from_rocket_to_ground state_msg;
+    state_msg.set_state(rocket_state);
+    sendMsg(&state_msg, REGULAR);
+}
+
+void sampleTime(void*) {
+    rocket::timestamp_from_rocket_to_ground msg;
+    msg.set_ms_since_boot(millis());
+    sendMsg(&msg, REGULAR);
+}
+
+void sampleEstimate(void*) {
+    rocket::estimate_from_rocket_to_ground msg;
+    msg.set_altitude(estimator.get_altitude());
+    msg.set_ax(estimator.get_ax());
+    msg.set_ay(estimator.get_ay());
+    msg.set_az(estimator.get_az());
+    msg.set_gx(estimator.get_gx());
+    msg.set_gy(estimator.get_gy());
+    msg.set_gz(estimator.get_gz());
+    msg.set_hx(estimator.get_hx());
+    msg.set_hy(estimator.get_hy());
+    msg.set_hz(estimator.get_hz());
+    sendMsg(&msg, REGULAR);
+}
+
+void initSampler() {
+    sampler.insertFunction(sampleTime, 50);
+    sampler.insertFunction(sampleState, 1);
+    //sampler.insertFunction(sampleMpu, 30);
+    sampler.insertFunction(sampleBmp, 50);
+    sampler.insertFunction(sampleFlashMemory, 1);
+    sampler.insertFunction(sampleBatteryVoltage, 1);
+    sampler.insertFunction(sampleEstimate, 20);
+    sampler.insertFunction(sampleGpsState, 3);
+    sampler.insertFunction(sampleGpsPosition, 3);
 }
 
 void setup() {
-    Serial.begin(BAUD); // USB serial
-    elapsedMillis boot;
-    while (!Serial && boot < 2000) {}    
+    Serial.begin(BAUD);
+    Serial3.begin(GPS_BAUD);
     initPins();
-    dispRgb(0, 0, 255);
+    rgb.begin();
+
     initFlash();
-    initMpu();
+    //initMpu();
     initBmp();
-    initRadio();
-    Serial.println("init finished");
+    //initRadio();
+    initSampler();
     if (error) {
         // not good
-        dispRgb(255, 0, 0);
-        analogWrite(PIN_BUZZER, 128);
-        delay(1000);
-        analogWrite(PIN_BUZZER, 0);
+        rgb.setPixel(0, RED);
+        rgb.show();
     } else {
         // the all good song
         // dance();
-        dispRgb(0, 255, 0);
+        rgb.setPixel(0, GREEN);
+        rgb.show();
     }
 }
 
 void loop() {
-    static uint32_t last_sample;
-    canMsg.buf[0] = 42;
-    canMsg.len = 1;
-    can.write(canMsg);
-    return;
     handleDataStreams();
-
-    uint32_t time = millis();
-    if (time - last_sample < stateToCycleDelay(rocket_state)) {
-        return;
-    }
-    // set current time
-    last_sample = time;
-    rocket::timestamp_from_rocket_to_ground msg;
-    msg.set_ms_since_boot(time);
-    sendMsg(&msg, ALWAYS);
-
-    rocket::state_from_rocket_to_ground state_msg;
-    state_msg.set_state(rocket_state);
-    sendMsg(&state_msg, REGULAR);
-
-    if (mpu.available()) {
-        mpu.update();
-        rocket::mpu_from_rocket_to_ground mpu_msg;
-        mpu_msg.set_acc_x(mpu.getAccX() * 9.82);
-        mpu_msg.set_acc_y(mpu.getAccY() * 9.82);
-        mpu_msg.set_acc_z(mpu.getAccZ() * 9.82 * (1 - 2 * negative_z));
-        mpu_msg.set_mag_x(mpu.getMagX());
-        mpu_msg.set_mag_y(mpu.getMagY());
-        mpu_msg.set_mag_z(mpu.getMagZ());
-        mpu_msg.set_gyro_x(mpu.getGyroX());
-        mpu_msg.set_gyro_y(mpu.getGyroY());
-        mpu_msg.set_gyro_z(mpu.getGyroZ());
-        sendMsg(&mpu_msg, REGULAR);
-    }
-
-    rocket::bmp_from_rocket_to_ground bmp_msg;
-    bmp_msg.set_altitude(bmp.readAltitude() - ground_level);
-    bmp_msg.set_temperature(bmp.readTemperature());
-    sendMsg(&bmp_msg, REGULAR);
-
-    rocket::flash_address_from_rocket_to_ground flash_msg;
-    flash_msg.set_address(flash_addr);
-    sendMsg(&flash_msg, REGULAR);
+    static uint32_t last_update = micros();
+    uint32_t dt = micros() - last_update;
+    sampler.setClockDivider(stateToTimeDiv(rocket_state));
+    sampler.update(dt);
+    last_update = micros();
 }

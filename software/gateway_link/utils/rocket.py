@@ -30,17 +30,25 @@ def uint_to_packedFloat(value, minValue, maxValue, size):
     return ratio * (maxValue - minValue) + minValue
 
 class state(Enum):
-    sleeping = 0
-    awake = 1
-    ready = 2
-    ascending = 3
-    falling = 4
-    landed = 5
+    debug = 0
+    sleeping = 1
+    awake = 2
+    ready = 3
+    powered_flight = 4
+    passive_flight = 5
+    falling = 6
+    landed = 7
+class fix_type(Enum):
+    none = 0
+    fix2D = 1
+    fix3D = 2
 class nodes(Enum):
     local = 0
     rocket = 1
     ground = 2
-    relay = 3
+    everyone = 3
+    relay = 4
+    launchpad = 5
 class fields(Enum):
     local_timestamp = 0
     ms_since_boot = 1
@@ -48,7 +56,7 @@ class fields(Enum):
     this_to_42 = 3
     is_enabled = 4
     address = 5
-    altitude = 6
+    pressure = 6
     temperature = 7
     acc_x = 8
     acc_y = 9
@@ -62,24 +70,45 @@ class fields(Enum):
     voltage = 17
     state = 18
     rssi = 19
+    pdop = 20
+    n_satellites = 21
+    fix_type = 22
+    altitude = 23
+    latitude = 24
+    longitude = 25
+    armed = 26
+    channel = 27
+    ax = 28
+    ay = 29
+    az = 30
+    gx = 31
+    gy = 32
+    gz = 33
+    hx = 34
+    hy = 35
+    hz = 36
 class messages(Enum):
     local_timestamp = 0
     timestamp = 1
     handshake = 2
-    simple_calibration = 3
-    mag_calibration = 4
-    wipe_flash = 5
-    play_music = 6
-    set_logging = 7
-    dump_flash = 8
-    flash_address = 9
-    bmp = 10
-    mpu = 11
-    battery_voltage = 12
-    set_state = 13
-    state = 14
-    rssi = 15
-    ms_since_boot = 16
+    mag_calibration = 3
+    wipe_flash = 4
+    play_music = 5
+    set_logging = 6
+    dump_flash = 7
+    flash_address = 8
+    bmp = 9
+    mpu = 10
+    battery_voltage = 11
+    set_state = 12
+    state = 13
+    rssi = 14
+    gps_state = 15
+    gps_pos = 16
+    ms_since_boot = 17
+    arm_pyro = 18
+    enable_pyro = 19
+    estimate = 20
 class categories(Enum):
     none = 0
 class local_timestamp_from_local_to_local:
@@ -158,71 +187,13 @@ class timestamp_from_rocket_to_ground:
         self._ms_since_boot = struct.unpack_from("<L", buf, index)[0]
         index += 4
         return
-class handshake_from_ground_to_rocket:
+class handshake_from_everyone_to_everyone:
     def __init__(self):
-        self._sender = nodes.ground
-        self._receiver = nodes.rocket
+        self._sender = nodes.everyone
+        self._receiver = nodes.everyone
         self._message = messages.handshake
         self._category = categories.none
         self._id = 2
-        self._size = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def build_buf(self):
-        buf = b""
-        return buf
-    def get_all_data(self):
-        data = []
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        return
-class handshake_from_rocket_to_ground:
-    def __init__(self):
-        self._sender = nodes.rocket
-        self._receiver = nodes.ground
-        self._message = messages.handshake
-        self._category = categories.none
-        self._id = 3
-        self._size = 0
-    def get_sender(self):
-        return self._sender
-    def get_receiver(self):
-        return self._receiver
-    def get_message(self):
-        return self._message
-    def get_id(self):
-        return self._id
-    def get_size(self):
-        return self._size
-    def get_category(self):
-        return self._category
-    def build_buf(self):
-        buf = b""
-        return buf
-    def get_all_data(self):
-        data = []
-        return data
-    def parse_buf(self, buf):
-        index = 0
-        return
-class simple_calibration_from_ground_to_rocket:
-    def __init__(self):
-        self._sender = nodes.ground
-        self._receiver = nodes.rocket
-        self._message = messages.simple_calibration
-        self._category = categories.none
-        self._id = 4
         self._size = 0
     def get_sender(self):
         return self._sender
@@ -251,7 +222,7 @@ class mag_calibration_from_ground_to_rocket:
         self._receiver = nodes.rocket
         self._message = messages.mag_calibration
         self._category = categories.none
-        self._id = 5
+        self._id = 3
         self._size = 4
         self._declination = 0
     def get_sender(self):
@@ -289,7 +260,7 @@ class wipe_flash_from_ground_to_rocket:
         self._receiver = nodes.rocket
         self._message = messages.wipe_flash
         self._category = categories.none
-        self._id = 6
+        self._id = 4
         self._size = 1
         self._this_to_42 = 0
     def get_sender(self):
@@ -327,7 +298,7 @@ class play_music_from_ground_to_rocket:
         self._receiver = nodes.rocket
         self._message = messages.play_music
         self._category = categories.none
-        self._id = 7
+        self._id = 5
         self._size = 0
     def get_sender(self):
         return self._sender
@@ -356,7 +327,7 @@ class set_logging_from_ground_to_rocket:
         self._receiver = nodes.rocket
         self._message = messages.set_logging
         self._category = categories.none
-        self._id = 8
+        self._id = 6
         self._size = 1
         self._bit_field = 0
     def get_sender(self):
@@ -394,7 +365,7 @@ class dump_flash_from_ground_to_rocket:
         self._receiver = nodes.rocket
         self._message = messages.dump_flash
         self._category = categories.none
-        self._id = 9
+        self._id = 7
         self._size = 0
     def get_sender(self):
         return self._sender
@@ -423,7 +394,7 @@ class flash_address_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.flash_address
         self._category = categories.none
-        self._id = 10
+        self._id = 8
         self._size = 4
         self._address = 0
     def get_sender(self):
@@ -461,9 +432,9 @@ class bmp_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.bmp
         self._category = categories.none
-        self._id = 11
+        self._id = 9
         self._size = 8
-        self._altitude = 0
+        self._pressure = 0
         self._temperature = 0
     def get_sender(self):
         return self._sender
@@ -477,27 +448,27 @@ class bmp_from_rocket_to_ground:
         return self._size
     def get_category(self):
         return self._category
-    def set_altitude(self, value):
-        self._altitude = value
+    def set_pressure(self, value):
+        self._pressure = value
     def set_temperature(self, value):
         self._temperature = value
     def build_buf(self):
         buf = b""
-        buf += struct.pack("<f", self._altitude)
+        buf += struct.pack("<f", self._pressure)
         buf += struct.pack("<f", self._temperature)
         return buf
-    def get_altitude(self):
-        return self._altitude
+    def get_pressure(self):
+        return self._pressure
     def get_temperature(self):
         return self._temperature
     def get_all_data(self):
         data = []
-        data.append((fields.altitude, self.get_altitude()))
+        data.append((fields.pressure, self.get_pressure()))
         data.append((fields.temperature, self.get_temperature()))
         return data
     def parse_buf(self, buf):
         index = 0
-        self._altitude = struct.unpack_from("<f", buf, index)[0]
+        self._pressure = struct.unpack_from("<f", buf, index)[0]
         index += 4
         self._temperature = struct.unpack_from("<f", buf, index)[0]
         index += 4
@@ -508,7 +479,7 @@ class mpu_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.mpu
         self._category = categories.none
-        self._id = 12
+        self._id = 10
         self._size = 36
         self._acc_x = 0
         self._acc_y = 0
@@ -618,7 +589,7 @@ class battery_voltage_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.battery_voltage
         self._category = categories.none
-        self._id = 13
+        self._id = 11
         self._size = 4
         self._voltage = 0
     def get_sender(self):
@@ -656,7 +627,7 @@ class set_state_from_ground_to_rocket:
         self._receiver = nodes.rocket
         self._message = messages.set_state
         self._category = categories.none
-        self._id = 14
+        self._id = 12
         self._size = 1
         self._state = 0
     def get_sender(self):
@@ -694,7 +665,7 @@ class state_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.state
         self._category = categories.none
-        self._id = 15
+        self._id = 13
         self._size = 1
         self._state = 0
     def get_sender(self):
@@ -732,7 +703,7 @@ class rssi_from_rocket_to_ground:
         self._receiver = nodes.ground
         self._message = messages.rssi
         self._category = categories.none
-        self._id = 16
+        self._id = 14
         self._size = 2
         self._rssi = 0
     def get_sender(self):
@@ -770,7 +741,7 @@ class rssi_from_relay_to_ground:
         self._receiver = nodes.ground
         self._message = messages.rssi
         self._category = categories.none
-        self._id = 17
+        self._id = 15
         self._size = 2
         self._rssi = 0
     def get_sender(self):
@@ -801,6 +772,118 @@ class rssi_from_relay_to_ground:
         index = 0
         self._rssi = struct.unpack_from("<h", buf, index)[0]
         index += 2
+        return
+class gps_state_from_rocket_to_ground:
+    def __init__(self):
+        self._sender = nodes.rocket
+        self._receiver = nodes.ground
+        self._message = messages.gps_state
+        self._category = categories.none
+        self._id = 16
+        self._size = 4
+        self._pdop = 0
+        self._n_satellites = 0
+        self._fix_type = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def set_pdop(self, value):
+        self._pdop = scaledFloat_to_uint(value, 100)
+    def set_n_satellites(self, value):
+        self._n_satellites = value
+    def set_fix_type(self, value):
+        self._fix_type = value.value
+    def build_buf(self):
+        buf = b""
+        buf += struct.pack("<H", self._pdop)
+        buf += struct.pack("<B", self._n_satellites)
+        buf += struct.pack("<B", self._fix_type)
+        return buf
+    def get_pdop(self):
+        return uint_to_scaledFloat(self._pdop, 100)
+    def get_n_satellites(self):
+        return self._n_satellites
+    def get_fix_type(self):
+        return fix_type(self._fix_type)
+    def get_all_data(self):
+        data = []
+        data.append((fields.pdop, self.get_pdop()))
+        data.append((fields.n_satellites, self.get_n_satellites()))
+        data.append((fields.fix_type, self.get_fix_type()))
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        self._pdop = struct.unpack_from("<H", buf, index)[0]
+        index += 2
+        self._n_satellites = struct.unpack_from("<B", buf, index)[0]
+        index += 1
+        self._fix_type = struct.unpack_from("<B", buf, index)[0]
+        index += 1
+        return
+class gps_pos_from_rocket_to_ground:
+    def __init__(self):
+        self._sender = nodes.rocket
+        self._receiver = nodes.ground
+        self._message = messages.gps_pos
+        self._category = categories.none
+        self._id = 17
+        self._size = 12
+        self._altitude = 0
+        self._latitude = 0
+        self._longitude = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def set_altitude(self, value):
+        self._altitude = value
+    def set_latitude(self, value):
+        self._latitude = value
+    def set_longitude(self, value):
+        self._longitude = value
+    def build_buf(self):
+        buf = b""
+        buf += struct.pack("<f", self._altitude)
+        buf += struct.pack("<f", self._latitude)
+        buf += struct.pack("<f", self._longitude)
+        return buf
+    def get_altitude(self):
+        return self._altitude
+    def get_latitude(self):
+        return self._latitude
+    def get_longitude(self):
+        return self._longitude
+    def get_all_data(self):
+        data = []
+        data.append((fields.altitude, self.get_altitude()))
+        data.append((fields.latitude, self.get_latitude()))
+        data.append((fields.longitude, self.get_longitude()))
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        self._altitude = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._latitude = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._longitude = struct.unpack_from("<f", buf, index)[0]
+        index += 4
         return
 class ms_since_boot_from_rocket_to_ground:
     def __init__(self):
@@ -840,6 +923,201 @@ class ms_since_boot_from_rocket_to_ground:
         self._ms_since_boot = struct.unpack_from("<L", buf, index)[0]
         index += 4
         return
+class arm_pyro_from_ground_to_launchpad:
+    def __init__(self):
+        self._sender = nodes.ground
+        self._receiver = nodes.launchpad
+        self._message = messages.arm_pyro
+        self._category = categories.none
+        self._id = 19
+        self._size = 1
+        self._bit_field = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def set_armed(self, value):
+        self._bit_field =  value * (self._bit_field | (1 << 0)) + (not value) * (self._bit_field & ~(1 << 0))
+    def build_buf(self):
+        buf = b""
+        buf += struct.pack("<B", self._bit_field)
+        return buf
+    def get_armed(self):
+        return self._bit_field & (1 << 0)
+    def get_all_data(self):
+        data = []
+        data.append((fields.armed, self.get_armed()))
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        self._bit_field = struct.unpack_from("<B", buf, index)[0]
+        index += 1
+        return
+class enable_pyro_from_ground_to_launchpad:
+    def __init__(self):
+        self._sender = nodes.ground
+        self._receiver = nodes.launchpad
+        self._message = messages.enable_pyro
+        self._category = categories.none
+        self._id = 20
+        self._size = 1
+        self._channel = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def set_channel(self, value):
+        self._channel = value
+    def build_buf(self):
+        buf = b""
+        buf += struct.pack("<B", self._channel)
+        return buf
+    def get_channel(self):
+        return self._channel
+    def get_all_data(self):
+        data = []
+        data.append((fields.channel, self.get_channel()))
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        self._channel = struct.unpack_from("<B", buf, index)[0]
+        index += 1
+        return
+class estimate_from_rocket_to_ground:
+    def __init__(self):
+        self._sender = nodes.rocket
+        self._receiver = nodes.ground
+        self._message = messages.estimate
+        self._category = categories.none
+        self._id = 21
+        self._size = 40
+        self._ax = 0
+        self._ay = 0
+        self._az = 0
+        self._gx = 0
+        self._gy = 0
+        self._gz = 0
+        self._hx = 0
+        self._hy = 0
+        self._hz = 0
+        self._altitude = 0
+    def get_sender(self):
+        return self._sender
+    def get_receiver(self):
+        return self._receiver
+    def get_message(self):
+        return self._message
+    def get_id(self):
+        return self._id
+    def get_size(self):
+        return self._size
+    def get_category(self):
+        return self._category
+    def set_ax(self, value):
+        self._ax = value
+    def set_ay(self, value):
+        self._ay = value
+    def set_az(self, value):
+        self._az = value
+    def set_gx(self, value):
+        self._gx = value
+    def set_gy(self, value):
+        self._gy = value
+    def set_gz(self, value):
+        self._gz = value
+    def set_hx(self, value):
+        self._hx = value
+    def set_hy(self, value):
+        self._hy = value
+    def set_hz(self, value):
+        self._hz = value
+    def set_altitude(self, value):
+        self._altitude = value
+    def build_buf(self):
+        buf = b""
+        buf += struct.pack("<f", self._ax)
+        buf += struct.pack("<f", self._ay)
+        buf += struct.pack("<f", self._az)
+        buf += struct.pack("<f", self._gx)
+        buf += struct.pack("<f", self._gy)
+        buf += struct.pack("<f", self._gz)
+        buf += struct.pack("<f", self._hx)
+        buf += struct.pack("<f", self._hy)
+        buf += struct.pack("<f", self._hz)
+        buf += struct.pack("<f", self._altitude)
+        return buf
+    def get_ax(self):
+        return self._ax
+    def get_ay(self):
+        return self._ay
+    def get_az(self):
+        return self._az
+    def get_gx(self):
+        return self._gx
+    def get_gy(self):
+        return self._gy
+    def get_gz(self):
+        return self._gz
+    def get_hx(self):
+        return self._hx
+    def get_hy(self):
+        return self._hy
+    def get_hz(self):
+        return self._hz
+    def get_altitude(self):
+        return self._altitude
+    def get_all_data(self):
+        data = []
+        data.append((fields.ax, self.get_ax()))
+        data.append((fields.ay, self.get_ay()))
+        data.append((fields.az, self.get_az()))
+        data.append((fields.gx, self.get_gx()))
+        data.append((fields.gy, self.get_gy()))
+        data.append((fields.gz, self.get_gz()))
+        data.append((fields.hx, self.get_hx()))
+        data.append((fields.hy, self.get_hy()))
+        data.append((fields.hz, self.get_hz()))
+        data.append((fields.altitude, self.get_altitude()))
+        return data
+    def parse_buf(self, buf):
+        index = 0
+        self._ax = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._ay = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._az = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._gx = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._gy = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._gz = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._hx = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._hy = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._hz = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        self._altitude = struct.unpack_from("<f", buf, index)[0]
+        index += 4
+        return
 def id_to_message_class(id):
     if id == 0:
         receiver = local_timestamp_from_local_to_local()
@@ -848,53 +1126,159 @@ def id_to_message_class(id):
         receiver = timestamp_from_rocket_to_ground()
         return receiver
     if id == 2:
-        receiver = handshake_from_ground_to_rocket()
+        receiver = handshake_from_everyone_to_everyone()
         return receiver
     if id == 3:
-        receiver = handshake_from_rocket_to_ground()
-        return receiver
-    if id == 4:
-        receiver = simple_calibration_from_ground_to_rocket()
-        return receiver
-    if id == 5:
         receiver = mag_calibration_from_ground_to_rocket()
         return receiver
-    if id == 6:
+    if id == 4:
         receiver = wipe_flash_from_ground_to_rocket()
         return receiver
-    if id == 7:
+    if id == 5:
         receiver = play_music_from_ground_to_rocket()
         return receiver
-    if id == 8:
+    if id == 6:
         receiver = set_logging_from_ground_to_rocket()
         return receiver
-    if id == 9:
+    if id == 7:
         receiver = dump_flash_from_ground_to_rocket()
         return receiver
-    if id == 10:
+    if id == 8:
         receiver = flash_address_from_rocket_to_ground()
         return receiver
-    if id == 11:
+    if id == 9:
         receiver = bmp_from_rocket_to_ground()
         return receiver
-    if id == 12:
+    if id == 10:
         receiver = mpu_from_rocket_to_ground()
         return receiver
-    if id == 13:
+    if id == 11:
         receiver = battery_voltage_from_rocket_to_ground()
         return receiver
-    if id == 14:
+    if id == 12:
         receiver = set_state_from_ground_to_rocket()
         return receiver
-    if id == 15:
+    if id == 13:
         receiver = state_from_rocket_to_ground()
         return receiver
-    if id == 16:
+    if id == 14:
         receiver = rssi_from_rocket_to_ground()
         return receiver
-    if id == 17:
+    if id == 15:
         receiver = rssi_from_relay_to_ground()
+        return receiver
+    if id == 16:
+        receiver = gps_state_from_rocket_to_ground()
+        return receiver
+    if id == 17:
+        receiver = gps_pos_from_rocket_to_ground()
         return receiver
     if id == 18:
         receiver = ms_since_boot_from_rocket_to_ground()
         return receiver
+    if id == 19:
+        receiver = arm_pyro_from_ground_to_launchpad()
+        return receiver
+    if id == 20:
+        receiver = enable_pyro_from_ground_to_launchpad()
+        return receiver
+    if id == 21:
+        receiver = estimate_from_rocket_to_ground()
+        return receiver
+def is_specifier(sender, name, field):
+    if (messages.local_timestamp == name and nodes.local == sender):
+        if (fields.local_timestamp == field):
+            return False
+    if (messages.timestamp == name and nodes.rocket == sender):
+        if (fields.ms_since_boot == field):
+            return False
+    if (messages.mag_calibration == name and nodes.ground == sender):
+        if (fields.declination == field):
+            return False
+    if (messages.wipe_flash == name and nodes.ground == sender):
+        if (fields.this_to_42 == field):
+            return False
+    if (messages.flash_address == name and nodes.rocket == sender):
+        if (fields.address == field):
+            return False
+    if (messages.bmp == name and nodes.rocket == sender):
+        if (fields.pressure == field):
+            return False
+        if (fields.temperature == field):
+            return False
+    if (messages.mpu == name and nodes.rocket == sender):
+        if (fields.acc_x == field):
+            return False
+        if (fields.acc_y == field):
+            return False
+        if (fields.acc_z == field):
+            return False
+        if (fields.gyro_x == field):
+            return False
+        if (fields.gyro_y == field):
+            return False
+        if (fields.gyro_z == field):
+            return False
+        if (fields.mag_x == field):
+            return False
+        if (fields.mag_y == field):
+            return False
+        if (fields.mag_z == field):
+            return False
+    if (messages.battery_voltage == name and nodes.rocket == sender):
+        if (fields.voltage == field):
+            return False
+    if (messages.set_state == name and nodes.ground == sender):
+        if (fields.state == field):
+            return False
+    if (messages.state == name and nodes.rocket == sender):
+        if (fields.state == field):
+            return False
+    if (messages.rssi == name and nodes.rocket == sender):
+        if (fields.rssi == field):
+            return False
+    if (messages.rssi == name and nodes.relay == sender):
+        if (fields.rssi == field):
+            return False
+    if (messages.gps_state == name and nodes.rocket == sender):
+        if (fields.pdop == field):
+            return False
+        if (fields.n_satellites == field):
+            return False
+        if (fields.fix_type == field):
+            return False
+    if (messages.gps_pos == name and nodes.rocket == sender):
+        if (fields.altitude == field):
+            return False
+        if (fields.latitude == field):
+            return False
+        if (fields.longitude == field):
+            return False
+    if (messages.ms_since_boot == name and nodes.rocket == sender):
+        if (fields.ms_since_boot == field):
+            return False
+    if (messages.enable_pyro == name and nodes.ground == sender):
+        if (fields.channel == field):
+            return False
+    if (messages.estimate == name and nodes.rocket == sender):
+        if (fields.ax == field):
+            return False
+        if (fields.ay == field):
+            return False
+        if (fields.az == field):
+            return False
+        if (fields.gx == field):
+            return False
+        if (fields.gy == field):
+            return False
+        if (fields.gz == field):
+            return False
+        if (fields.hx == field):
+            return False
+        if (fields.hy == field):
+            return False
+        if (fields.hz == field):
+            return False
+        if (fields.altitude == field):
+            return False
+    return False

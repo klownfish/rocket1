@@ -77,8 +77,8 @@ class SerialWrapper():
     #returns true or false if a port contatins a device
     def init_device(self):
         if self.device == "rocket":
-            msg = protocol.handshake_from_ground_to_rocket()
-            reply = protocol.handshake_from_rocket_to_ground()
+            msg = protocol.handshake_from_everyone_to_everyone()
+            reply = protocol.handshake_from_everyone_to_everyone()
             handshake = bytes(SEPARATOR + [msg.get_id()]) 
             response = bytes(SEPARATOR + [reply.get_id()])
             print(handshake)
@@ -281,15 +281,15 @@ class SerialReader():
         buf = self.stream.read(length)
         if len(buf) != length:
             print("invalid length")
-            return    
+            return
         decoder.parse_buf(buf)
         decoded_data = decoder.get_all_data()
         source = decoder.get_sender()
         message = decoder.get_message()
+        print(message.name)
         sensor_index = None
         if len(decoded_data) == 0:
             current_time = self.decide_on_time("", 0)
-            print(message.name)
             self.data[source.name][message.name]["value"].x.append(current_time)
             self.data[source.name][message.name]["value"].y.append(1)
         for single_data in decoded_data:
@@ -333,6 +333,11 @@ class Gateway(SerialReader):
         msg.set_state(protocol.state.ready)
         self._send_message(msg)
 
+    def enter_debug(self):
+        msg = protocol.set_state_from_ground_to_rocket()
+        msg.set_state(protocol.state.debug)
+        self._send_message(msg)
+
     def calibrate_simple(self):
         msg = protocol.simple_calibration_from_ground_to_rocket()
         self._send_message(msg)
@@ -364,4 +369,19 @@ class Gateway(SerialReader):
     def disable_logging(self):
         msg = protocol.set_logging_from_ground_to_rocket()
         msg.set_is_enabled(False)
+        self._send_message(msg)
+
+    def arm(self):
+        msg = protocol.arm_pyro_from_ground_to_launchpad()
+        msg.set_armed(True)
+        self._send_message(msg)
+    
+    def disarm(self):
+        msg = protocol.arm_pyro_from_ground_to_launchpad()
+        msg.set_armed(False)
+        self._send_message(msg)
+    
+    def enable_pyro1(self):
+        msg = protocol.enable_pyro_from_ground_to_launchpad()
+        msg.set_channel(1)
         self._send_message(msg)
