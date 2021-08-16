@@ -1,4 +1,4 @@
-(module xt30_pigtail (layer F.Cu) (tedit 61178FFC)
+(module xt30_pigtail (layer F.Cu) (tedit 61198507)
   (descr "Connector XT30 Vertical Cable Male, https://www.tme.eu/en/Document/3cbfa5cfa544d79584972dd5234a409e/XT30U%20SPEC.pdf")
   (tags "RC Connector XT30")
   (fp_text reference REF** (at 2.5 -4) (layer F.SilkS) hide
@@ -13,8 +13,8 @@
   (fp_text user + (at 5.5 2) (layer F.SilkS)
     (effects (font (size 1.5 1.5) (thickness 0.15)))
   )
-  (pad 1 thru_hole rect (at 0 0) (size 2.8 2.8) (drill 2) (layers *.Cu *.Mask))
-  (pad 2 thru_hole circle (at 4 0) (size 3 3) (drill 2) (layers *.Cu *.Mask))
+  (pad 1 thru_hole rect (at 0 0) (size 2.2 2.2) (drill 1.6) (layers *.Cu *.Mask))
+  (pad 2 thru_hole circle (at 4 0) (size 2.3 2.3) (drill 1.6) (layers *.Cu *.Mask))
   (model ${KISYS3DMOD}/Connector_AMASS.3dshapes/AMASS_XT30U-M_1x02_P5.0mm_Vertical.wrl
     (at (xyz 0 0 0))
     (scale (xyz 1 1 1))

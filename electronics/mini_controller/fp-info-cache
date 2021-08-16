@@ -1,4 +1,4 @@
-19233286440633608
+19239802162861608
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -82971,6 +82971,13 @@ CX-0905C
 2
 2
 custom
+DSK-414
+
+
+0
+2
+2
+custom
 GY91
 
 
@@ -83006,6 +83013,13 @@ resistor handsolder
 2
 2
 custom
+S4B-XH-SM4-TBLFSN
+
+
+0
+6
+6
+custom
 SC-74-a
 SC-74, 6 Pin (https://www.nxp.com/docs/en/package-information/SOT457.pdf), generated with kicad-footprint-generator ipc_gullwing_generator.py
 SC-74 SO
@@ -83017,8 +83031,8 @@ SGGP.12.4.A.02
 
 
 0
-0
-0
+9
+2
 custom
 Teensy41
 
@@ -83040,6 +83054,13 @@ VXO7805-500-M
 0
 4
 4
+custom
+XDCR_CMT-0502-75-SMT-TR
+
+
+0
+3
+3
 custom
 aesir
 
@@ -83124,3 +83145,10 @@ LED diameter 5.0mm 2 pins diameter 5.0mm 3 pins diameter 5.0mm 4 pins RGB RGBLED
 0
 4
 4
+custom
+xt30_pigtail
+Connector XT30 Vertical Cable Male, https://www.tme.eu/en/Document/3cbfa5cfa544d79584972dd5234a409e/XT30U%20SPEC.pdf
+RC Connector XT30
+0
+2
+2

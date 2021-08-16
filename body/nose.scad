@@ -184,7 +184,7 @@ module base_adapter() {
 
 
 module nose_cone() {
-    inner_diam = 50.5;
+    inner_diam = 50.75;
     outer_diam = 52.5;
     tube_length = 65;
     //nose
@@ -316,10 +316,10 @@ union() {
     //camera();
     //translate([0,0,-1])
     //base_adapter();
-    fc_mount_v2();
+    //fc_mount_v2();
     difference() {
         //translate([0,0,1])
-        //nose_cone();
+        nose_cone();
         //translate([0,-500,0])
         //cube(1000);
     }
