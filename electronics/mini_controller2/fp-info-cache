@@ -1,4 +1,4 @@
-19239802162861608
+19246318776300608
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -82943,6 +82943,13 @@ custom
 10
 10
 custom
+ANT-868-PW-LP
+
+
+0
+2
+1
+custom
 Adafruit-BMP280
 
 
@@ -83005,6 +83012,13 @@ LED diameter 5.0mm 2 pins diameter 5.0mm 3 pins diameter 5.0mm 4 pins RGB RGBLED
 0
 4
 4
+custom
+PinHeader_1x02_P2.54mm_Vertical_SMD
+surface-mounted straight pin header, 1x02, 2.54mm pitch, single row, style 1 (pin 1 left)
+Surface mounted pin header SMD 1x02 2.54mm single row style1 pin1 left
+0
+2
+2
 custom
 R_1812_4532Metric_Pad1.30x3.40mm_HandSolder_no_silk
 Resistor SMD 1812 (4532 Metric), square (rectangular) end terminal, IPC_7351 nominal with elongated pad for handsoldering. (Body size source: https://www.nikhef.nl/pub/departments/mt/projects/detectorR_D/dtddice/ERJ2G.pdf), generated with kicad-footprint-generator
@@ -83103,6 +83117,20 @@ drotek_10dof
 0
 8
 8
+custom
+just_4_pads
+
+
+0
+4
+4
+custom
+just_a_pad
+
+
+0
+1
+1
 custom
 logo
 
