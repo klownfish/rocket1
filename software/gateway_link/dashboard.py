@@ -12,8 +12,7 @@ def main():
     settings = tk.Frame(root)
 
     open_serial = tk.Button(settings, text="open serial", command = gw.open_serial, **padding)
-    open_flash = ButtonFile(settings, text="open flash file", command = gw.open_flash_file, **padding)
-    open_file = ButtonFile(settings, text="open radio file", command = gw.open_backup_file, **padding)
+    open_flash = ButtonFile(settings, text="open file", command = gw.open_flash_file, **padding)
     
     mag_calibrate = MagCalibration(settings, gw, **padding)
     sleep = tk.Button(settings, text="sleep", command = gw.enter_sleep, **padding)
@@ -47,9 +46,6 @@ def main():
     index = 0
 
     open_serial.grid(column = 0, row = index)
-    index += 1
-
-    open_file.grid(column = 0, row = index)
     index += 1
 
     open_flash.grid(column = 0, row = index)

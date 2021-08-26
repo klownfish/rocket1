@@ -145,11 +145,11 @@ module base_adapter() {
     inner_diam = 48;
     inner_inner_diam = 46.5;
     difference() {
-        cylinder(h=1, r=outer_diam/2);
+        cylinder(h=2, r=outer_diam/2);
         translate([-29/2,-10,3])
         camera_pcb_holes();
         
-        translate([-29/2,-10,0.6])
+        translate([-29/2,-10,1])
         union() {
             distance = 25.5;
             translate([1.5,1.5,0])
@@ -315,11 +315,11 @@ union() {
     //translate([0,10,11])
     //camera();
     //translate([0,0,-1])
-    //base_adapter();
+    base_adapter();
     //fc_mount_v2();
     difference() {
         //translate([0,0,1])
-        nose_cone();
+        //nose_cone();
         //translate([0,-500,0])
         //cube(1000);
     }

@@ -98,9 +98,9 @@ class ButtonFile(tk.Button):
 class GyroGraph(GenericGraph):
     def __init__(self, root, gw):
         dataLists = [
-            gw.data["rocket"]["estimate"]["gyro_x"],
-            gw.data["rocket"]["estimate"]["gyro_y"],
-            gw.data["rocket"]["estimate"]["gyro_z"]
+            gw.data["rocket"]["estimate"]["gx"],
+            gw.data["rocket"]["estimate"]["gy"],
+            gw.data["rocket"]["estimate"]["gz"]
         ]
         super().__init__(root, gw.get_current_time, dataLists)
         self.ax.set_ylim(-6.28, 6.28)
@@ -115,14 +115,14 @@ class AccelerationGraph(GenericGraph):
             gw.data["rocket"]["estimate"]["az"],
         ]
         super().__init__(root, gw.get_current_time, dataLists)
-        self.ax.set_ylim(-20, 20)
+        self.ax.set_ylim(-5, 40)
         self.ax.set_title("acceleration - m/s²")
         self.ax.axhline(0, color='gray')
 
 class AltitudeGraph(GenericGraph):
     def __init__(self, root, gw):
         super().__init__(root, gw.get_current_time, [gw.data["rocket"]["estimate"]["altitude"]])
-        self.ax.set_ylim(-5, 50)
+        self.ax.set_ylim(-5, 150)
         self.ax.set_title("altitude - m")
 
 class MagCalibration(tk.Frame):

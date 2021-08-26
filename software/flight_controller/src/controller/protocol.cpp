@@ -65,12 +65,12 @@ void sendMsg(rocket::MessageBase* msg, enum send_when send) {
         case REGULAR:
             message_count[id] = (message_count[id] + 1) % stateToRadioFrequency(rocket_state);
             if (message_count[id] == 0) {
-                //radio.send(buf, len);
+                radio.send(buf, len);
                 Serial.write(buf, len);
             }
             break;
         case ALWAYS:
-            //radio.send(buf, len);
+            radio.send(buf, len);
             Serial.write(buf, len);
             break;
         case NEVER:

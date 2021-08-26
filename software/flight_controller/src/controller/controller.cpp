@@ -294,7 +294,7 @@ void sampleEstimate(void*) {
 void initSampler() {
     sampler.insertFunction(sampleTime, 50);
     sampler.insertFunction(sampleState, 1);
-    //sampler.insertFunction(sampleMpu, 30);
+    sampler.insertFunction(sampleMpu, 30);
     sampler.insertFunction(sampleBmp, 50);
     sampler.insertFunction(sampleFlashMemory, 1);
     sampler.insertFunction(sampleBatteryVoltage, 1);
@@ -310,9 +310,9 @@ void setup() {
     rgb.begin();
 
     initFlash();
-    //initMpu();
+    initMpu();
     initBmp();
-    //initRadio();
+    initRadio();
     initSampler();
     if (error) {
         // not good

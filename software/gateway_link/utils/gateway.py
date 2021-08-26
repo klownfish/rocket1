@@ -188,15 +188,6 @@ class SerialReader():
     def redirect_data(self, data):
         self.data = data
 
-    #opens a file that has been saved from this very program
-    def open_backup_file(self, path):
-        if self.is_serial_open():
-            return
-        self.time_sync_state = BACKUP_TIMESTAMP
-        self.start_time = None 
-        self.stream = open(path, "r+b")
-        self.stream_is_active = True
-
     #opens a file dumped from the flash chip
     def open_flash_file(self, path):
         if self.is_serial_open():
@@ -232,14 +223,6 @@ class SerialReader():
                     self.start_time = time.time()
             return time.time() - self.start_time
 
-        if self.time_sync_state == BACKUP_TIMESTAMP:
-            if name == "local_timestamp":
-                self.last_timestamp = value
-            if self.last_timestamp == None:
-                return 0 #can't tell a proper value
-            else:
-                return self.last_timestamp / 1000 #convert to seconds
-
         if self.time_sync_state == FLASH_TIMESTAMP:
             if name == "ms_since_boot":
                 self.last_timestamp = value
@@ -263,9 +246,6 @@ class SerialReader():
             if separator[0] != SEPARATOR[0] or self.stream.read(1)[0] != SEPARATOR[1]:
                 print(self.device + ": Invalid Separator: " + str(separator))
                 continue
-            #timestamp if reading from serial
-            if self.stream == self.ser:
-                self.ser.timestamp(self.get_current_time() * 1000)
             frame_id = self.stream.read(1)[0]
 
             #we have two different protocol definitions so decide on which one ot use
@@ -275,6 +255,7 @@ class SerialReader():
                 self.read_fc_data(fc_decoder)
             else:
                 print("invalid id: ", frame_id)
+                
 
     def read_fc_data(self, decoder):
         length = decoder.get_size()
@@ -286,7 +267,6 @@ class SerialReader():
         decoded_data = decoder.get_all_data()
         source = decoder.get_sender()
         message = decoder.get_message()
-        print(message.name)
         sensor_index = None
         if len(decoded_data) == 0:
             current_time = self.decide_on_time("", 0)

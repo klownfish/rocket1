@@ -975,51 +975,6 @@ Wire Wire Line
 	9400 5900 9450 5900
 Wire Wire Line
 	9400 6150 9700 6150
-Text Label 4100 6000 2    50   ~ 0
-V_BAT
-Connection ~ 3950 6450
-Wire Wire Line
-	3950 6650 3950 6450
-Wire Wire Line
-	3800 6650 3950 6650
-Wire Wire Line
-	3950 6000 4100 6000
-Wire Wire Line
-	3950 6450 3950 6000
-Wire Wire Line
-	3800 6450 3950 6450
-$Comp
-L Connector_Generic:Conn_01x04 J1
-U 1 1 6134D8FA
-P 3600 6550
-F 0 "J1" H 3518 6125 50  0000 C CNN
-F 1 "terminal 1" H 3518 6216 50  0000 C CNN
-F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-4-2.54_1x04_P2.54mm_Horizontal" H 3600 6550 50  0001 C CNN
-F 3 "~" H 3600 6550 50  0001 C CNN
-	1    3600 6550
-	-1   0    0    1   
-$EndComp
-$Comp
-L Connector_Generic:Conn_01x04 J2
-U 1 1 613A9430
-P 3650 7150
-F 0 "J2" H 3650 6850 50  0000 L CNN
-F 1 "terminal 2" H 3600 6750 50  0000 L CNN
-F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-4-2.54_1x04_P2.54mm_Horizontal" H 3650 7150 50  0001 C CNN
-F 3 "~" H 3650 7150 50  0001 C CNN
-	1    3650 7150
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3450 7350 3950 7350
-Wire Wire Line
-	3450 7150 3950 7150
-Wire Wire Line
-	3950 7150 3950 7350
-Connection ~ 3950 7150
-Connection ~ 3950 6650
-Wire Wire Line
-	3950 6650 3950 7150
 Wire Wire Line
 	5800 7200 6450 7200
 Wire Wire Line
@@ -1053,14 +1008,6 @@ Wire Wire Line
 	4450 7050 4750 7050
 Wire Wire Line
 	4450 7250 4750 7250
-Wire Wire Line
-	3800 6350 4250 6350
-Wire Wire Line
-	3800 6550 4250 6550
-Wire Wire Line
-	3450 7250 4250 7250
-Wire Wire Line
-	3450 7050 4250 7050
 Text Label 4450 7250 0    50   ~ 0
 PYRO_4
 Text Label 4450 7050 0    50   ~ 0
@@ -1069,14 +1016,6 @@ Text Label 6450 7200 2    50   ~ 0
 PYRO_4_EN
 Text Label 6450 7000 2    50   ~ 0
 PYRO_3_EN
-Text Label 4250 6550 2    50   ~ 0
-PYRO_2
-Text Label 4250 6350 2    50   ~ 0
-PYRO_4
-Text Label 4250 7250 2    50   ~ 0
-PYRO_1
-Text Label 4250 7050 2    50   ~ 0
-PYRO_3
 Text Label 4450 6400 0    50   ~ 0
 PYRO_2
 Wire Wire Line
@@ -1651,4 +1590,65 @@ Text Label 4950 2600 0    50   ~ 0
 EXT_RX
 Wire Wire Line
 	4950 2500 5350 2500
+Text Label 4250 7050 2    50   ~ 0
+PYRO_3
+Text Label 4250 7250 2    50   ~ 0
+PYRO_1
+Text Label 4250 6350 2    50   ~ 0
+PYRO_4
+Text Label 4250 6550 2    50   ~ 0
+PYRO_2
+Wire Wire Line
+	3450 7050 4250 7050
+Wire Wire Line
+	3450 7250 4250 7250
+Wire Wire Line
+	3800 6550 4250 6550
+Wire Wire Line
+	3800 6350 4250 6350
+Wire Wire Line
+	3950 7150 3950 7350
+Connection ~ 3950 7150
+Wire Wire Line
+	3450 7150 3950 7150
+Wire Wire Line
+	3450 7350 3950 7350
+$Comp
+L Connector_Generic:Conn_01x04 J2
+U 1 1 613A9430
+P 3650 7150
+F 0 "J2" H 3650 6850 50  0000 L CNN
+F 1 "terminal 2" H 3600 6750 50  0000 L CNN
+F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-4-2.54_1x04_P2.54mm_Horizontal" H 3650 7150 50  0001 C CNN
+F 3 "~" H 3650 7150 50  0001 C CNN
+	1    3650 7150
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x04 J1
+U 1 1 6134D8FA
+P 3600 6550
+F 0 "J1" H 3518 6125 50  0000 C CNN
+F 1 "terminal 1" H 3518 6216 50  0000 C CNN
+F 2 "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-4-2.54_1x04_P2.54mm_Horizontal" H 3600 6550 50  0001 C CNN
+F 3 "~" H 3600 6550 50  0001 C CNN
+	1    3600 6550
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	3800 6450 3950 6450
+Wire Wire Line
+	3950 6000 4100 6000
+Wire Wire Line
+	3950 6650 3950 7150
+Connection ~ 3950 6650
+Wire Wire Line
+	3800 6650 3950 6650
+Wire Wire Line
+	3950 6450 3950 6000
+Wire Wire Line
+	3950 6650 3950 6450
+Connection ~ 3950 6450
+Text Label 4100 6000 2    50   ~ 0
+V_BAT
 $EndSCHEMATC
