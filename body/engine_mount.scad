@@ -51,22 +51,22 @@ difference() {
 
         //lower holder
         difference() {
-            cylinder(h=2, r=inner_diam/2);
+            cylinder(h=3, r=inner_diam/2);
             translate([0,0,-1])
-            cylinder(h=4, r=engine_size/2);
+            cylinder(h=5, r=engine_size/2);
         }
     }
     
     //engine screws
     translate([engine_size/2 + 2.1,0,-1])
     cylinder(h=10, r=1.2);
-    translate([engine_size/2 + 2.1,0,2.75])
+    translate([engine_size/2 + 2.1,0,3])
     rotate([0, 0, 90])
     NutM2();
 
     translate([-engine_size/2 - 2.1,0,-1])
     cylinder(h=10, r=1.2);
-    translate([-engine_size/2 - 2.1,0,2.75])
+    translate([-engine_size/2 - 2.1,0,3])
     rotate([0, 0, 90])
     NutM2();
 }

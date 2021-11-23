@@ -82,14 +82,14 @@ void rocket::rx(rocket::handshake_from_everyone_to_everyone msg) {
 void setup() {
     Serial.begin(BAUD);
     initPins();
-    //rgb.begin();
+    rgb.begin();
     initRadio();
     if (!error) {
-        //rgb.setPixel(0, WHITE);
-        //rgb.show();
+        rgb.setPixel(0, WHITE);
+        rgb.show();
     } else {
-        //rgb.setPixel(0, ORANGE);
-        //rgb.show();
+        rgb.setPixel(0, ORANGE);
+        rgb.show();
     }
 }
 

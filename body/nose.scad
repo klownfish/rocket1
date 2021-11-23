@@ -56,6 +56,8 @@ module flight_controller () {
     }
 };
 
+
+
 module fc_mount_v2() {
     hole1 = [4.57, 0, 2.54];
     hole2 = [4.57, 0, 97-2.54];
@@ -101,7 +103,7 @@ module fc_mount_v2() {
     }
     
     //camera holder
-    translate([0,11,0])
+    translate([0,14,0])
     camera_mount();
     
     //nose holder
@@ -290,22 +292,23 @@ module camera() {
 
 module camera_mount() {
     thickness = 5;
-    width = 3;
+    width = 2;
     bridge_height = 8;
-    translate([-17.5 - width,-thickness/2,0])
+    actual_width = 32;
+    translate([-actual_width / 2 - width,-thickness/2,0])
     difference() {
-        cube([35 + width * 2,thickness, bridge_height+width]);
+        cube([actual_width + width * 2,thickness, bridge_height+width]);
         translate([width,-1,-1])
-        cube([35, thickness + 2, bridge_height+1]);
+        cube([actual_width, thickness + 2, bridge_height+1]);
     }
     
     translate([-7.5 - width, -thickness/2,bridge_height+width])
     difference() {
-        cube([15 + 2 * width, thickness, 14]);
+        cube([15 + 2 * width, thickness, 14 + width]);
         translate([width,-1,0])
-        cube([15, 100, 17]);
+        cube([15, 100, 14.2]);
         
-        translate([-40, thickness/2, 7.5])
+        translate([-40, thickness/2, 7])
         rotate([0,90,0])
         cylinder(h=100, r=1.1);
     }
@@ -315,8 +318,8 @@ union() {
     //translate([0,10,11])
     //camera();
     //translate([0,0,-1])
-    base_adapter();
-    //fc_mount_v2();
+    //base_adapter();
+    fc_mount_v2();
     difference() {
         //translate([0,0,1])
         //nose_cone();

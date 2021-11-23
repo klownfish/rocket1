@@ -65,7 +65,7 @@ class TextLastValue(tk.Label):
         self.root.after(REFRESH, self.update)    
         if len(self.value.y) == 0:
             return
-        self.stringVar.set(self.text + '%.2f' % self.value.y[-1])
+        self.stringVar.set(self.text + '%.10f' % self.value.y[-1])
 
 class EnumLastValue(tk.Label):
     def __init__(self, root, text, value, **kwargs):
